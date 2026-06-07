@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Phone, Mail, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { colors } from '@/constants/colors';
@@ -21,7 +21,7 @@ export default function HelpScreen({ navigation }: any) {
   const contact = (type: string) => {
     if (type === 'call') Linking.openURL('tel:+919876543210');
     else if (type === 'email') Linking.openURL('mailto:support@hairahmedabad.com');
-    else Alert.alert('Live Chat', 'Connecting you to our support team...');
+    else navigation.navigate('Chatbot');
   };
 
   return (

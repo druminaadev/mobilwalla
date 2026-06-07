@@ -9,6 +9,7 @@ import AddAddressScreen from '@/screens/profile/AddAddressScreen';
 import SettingsScreen from '@/screens/profile/SettingsScreen';
 import NotificationsScreen from '@/screens/profile/NotificationsScreen';
 import HelpScreen from '@/screens/profile/HelpScreen';
+import ChatbotScreen from '@/screens/support/ChatbotScreen';
 import WalletHomeScreen from '@/screens/wallet/WalletHomeScreen';
 import AddMoneyScreen from '@/screens/wallet/AddMoneyScreen';
 import TransactionHistoryScreen from '@/screens/wallet/TransactionHistoryScreen';
@@ -26,6 +27,7 @@ export default function ProfileStack() {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="Chatbot" component={ChatbotScreen} />
       <Stack.Screen name="WalletHome" component={WalletHomeScreen} />
       <Stack.Screen name="AddMoney" component={AddMoneyScreen} />
       <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />

@@ -53,13 +53,6 @@ export type BookingsStackParamList = {
   WriteReview: { bookingId: string };
 };
 
-export type WalletStackParamList = {
-  WalletHome: undefined;
-  AddMoney: undefined;
-  TransactionHistory: undefined;
-  Referral: undefined;
-};
-
 export type ShopStackParamList = {
   ProductList: undefined;
   ProductDetail: { product: any; id?: string };
@@ -88,6 +81,7 @@ export type ProfileStackParamList = {
   Settings: undefined;
   Notifications: undefined;
   Help: undefined;
+  Chatbot: undefined;
   // Wallet screens nested inside ProfileStack
   WalletHome: undefined;
   AddMoney: undefined;

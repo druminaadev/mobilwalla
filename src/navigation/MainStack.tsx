@@ -9,7 +9,6 @@ import ServicesStack from './ServicesStack';
 import BookingsStack from './BookingsStack';
 import ShopStack from './ShopStack';
 import ProfileStack from './ProfileStack';
-// WalletStack is nested inside ProfileStack — not a bottom tab
 
 const Tab = createBottomTabNavigator();
 
