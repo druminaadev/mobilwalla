@@ -1,8 +1,7 @@
 import {
-  Salon, SalonService, Staff, Booking, WalletTransaction,
-  Review, Notification, User, BookingStatus, PaymentStatus,
-  UserRole, UserStatus,
-} from '@/types/models';
+  Salon, Service, Staff, Booking, WalletTransaction,
+  Review, Notification, User, UserRole, UserStatus,
+} from '../types/models';
 
 export const DEMO_USER: User = {
   id: 'u1',
@@ -93,41 +92,41 @@ export const DEMO_SALONS: Salon[] = [
   },
 ];
 
-export const DEMO_SERVICES: Record<string, SalonService[]> = {
+export const DEMO_SERVICES: Record<string, Service[]> = {
   s1: [
-    { id: 'sv1', salonId: 's1', categoryId: 'hair', name: 'Haircut', description: 'Precision cut by senior stylist', price: 500, duration: 45, isActive: true },
-    { id: 'sv2', salonId: 's1', categoryId: 'hair', name: 'Hair Coloring', description: 'Global or highlights with premium color', price: 2000, duration: 120, isActive: true },
-    { id: 'sv3', salonId: 's1', categoryId: 'hair', name: 'Beard Trim', description: 'Shape & trim with hot towel finish', price: 200, duration: 20, isActive: true },
-    { id: 'sv4', salonId: 's1', categoryId: 'hair', name: 'Hair Spa', description: 'Deep conditioning treatment', price: 900, duration: 60, isActive: true },
-    { id: 'sv5', salonId: 's1', categoryId: 'skin', name: 'Facial', description: 'Deep cleansing brightening facial', price: 800, duration: 60, isActive: true },
-    { id: 'sv6', salonId: 's1', categoryId: 'body', name: 'Full Body Massage', description: 'Swedish relaxation massage', price: 1500, duration: 90, isActive: true },
-    { id: 'sv7', salonId: 's1', categoryId: 'body', name: 'Waxing (Full)', description: 'Full body Rica waxing', price: 1200, duration: 75, isActive: true },
-    { id: 'sv8', salonId: 's1', categoryId: 'nails', name: 'Manicure', description: 'Classic manicure with polish', price: 400, duration: 45, isActive: true },
-    { id: 'sv9', salonId: 's1', categoryId: 'nails', name: 'Pedicure', description: 'Relaxing pedicure with scrub', price: 500, duration: 45, isActive: true },
+    { id: 'sv1', category: 'hair', name: 'Haircut', description: 'Precision cut by senior stylist', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv2', category: 'hair', name: 'Hair Coloring', description: 'Global or highlights with premium color', price: 2000, duration: 120, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv3', category: 'hair', name: 'Beard Trim', description: 'Shape & trim with hot towel finish', price: 200, duration: 20, image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv4', category: 'hair', name: 'Hair Spa', description: 'Deep conditioning treatment', price: 900, duration: 60, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv5', category: 'skin', name: 'Facial', description: 'Deep cleansing brightening facial', price: 800, duration: 60, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv6', category: 'body', name: 'Full Body Massage', description: 'Swedish relaxation massage', price: 1500, duration: 90, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv7', category: 'body', name: 'Waxing (Full)', description: 'Full body Rica waxing', price: 1200, duration: 75, image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv8', category: 'nails', name: 'Manicure', description: 'Classic manicure with polish', price: 400, duration: 45, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv9', category: 'nails', name: 'Pedicure', description: 'Relaxing pedicure with scrub', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80' },
   ],
   default: [
-    { id: 'sv1', salonId: '', categoryId: 'hair', name: 'Haircut', description: 'Precision cut', price: 500, duration: 45, isActive: true },
-    { id: 'sv2', salonId: '', categoryId: 'hair', name: 'Hair Coloring', description: 'Full color', price: 2000, duration: 120, isActive: true },
-    { id: 'sv3', salonId: '', categoryId: 'hair', name: 'Beard Trim', description: 'Shape & trim', price: 200, duration: 20, isActive: true },
-    { id: 'sv4', salonId: '', categoryId: 'skin', name: 'Facial', description: 'Deep cleansing', price: 800, duration: 60, isActive: true },
-    { id: 'sv5', salonId: '', categoryId: 'body', name: 'Spa', description: 'Relaxation spa', price: 1500, duration: 90, isActive: true },
-    { id: 'sv6', salonId: '', categoryId: 'body', name: 'Massage', description: 'Full body massage', price: 1200, duration: 60, isActive: true },
-    { id: 'sv7', salonId: '', categoryId: 'nails', name: 'Manicure', description: 'Classic manicure', price: 400, duration: 45, isActive: true },
-    { id: 'sv8', salonId: '', categoryId: 'nails', name: 'Pedicure', description: 'Relaxing pedicure', price: 500, duration: 45, isActive: true },
+    { id: 'sv1', category: 'hair', name: 'Haircut', description: 'Precision cut', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv2', category: 'hair', name: 'Hair Coloring', description: 'Full color', price: 2000, duration: 120, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv3', category: 'hair', name: 'Beard Trim', description: 'Shape & trim', price: 200, duration: 20, image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv4', category: 'skin', name: 'Facial', description: 'Deep cleansing', price: 800, duration: 60, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv5', category: 'body', name: 'Spa', description: 'Relaxation spa', price: 1500, duration: 90, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv6', category: 'body', name: 'Massage', description: 'Full body massage', price: 1200, duration: 60, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv7', category: 'nails', name: 'Manicure', description: 'Classic manicure', price: 400, duration: 45, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv8', category: 'nails', name: 'Pedicure', description: 'Relaxing pedicure', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80' },
   ],
 };
 
 export const DEMO_STAFF: Record<string, Staff[]> = {
   s1: [
-    { id: 'st1', salonId: 's1', name: 'Rahul Mehta',  bio: 'Senior stylist with 8 years of experience', specialization: 'Hair Coloring & Cuts', rating: 4.9, totalBookings: 520, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
-    { id: 'st2', salonId: 's1', name: 'Anjali Patel', bio: 'Skin & beauty specialist',                  specialization: 'Facials & Skin Care',  rating: 4.8, totalBookings: 390, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
-    { id: 'st3', salonId: 's1', name: 'Vikram Singh', bio: "Men's grooming expert",                    specialization: 'Haircut & Beard',      rating: 4.7, totalBookings: 280, isAvailable: false, avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' },
-    { id: 'st4', salonId: 's1', name: 'Neha Joshi',   bio: 'Nail art & body care',                      specialization: 'Nails & Waxing',       rating: 4.6, totalBookings: 210, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st1', name: 'Rahul Mehta', designation: 'Senior stylist', specializations: ['Hair Coloring & Cuts'], rating: 4.9, reviewCount: 520, experience: 8, isAvailable: true, photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st2', name: 'Anjali Patel', designation: 'Skin & beauty specialist', specializations: ['Facials & Skin Care'], rating: 4.8, reviewCount: 390, experience: 5, isAvailable: true, photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st3', name: 'Vikram Singh', designation: "Men's grooming expert", specializations: ['Haircut & Beard'], rating: 4.7, reviewCount: 280, experience: 4, isAvailable: false, photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st4', name: 'Neha Joshi', designation: 'Nail art & body care', specializations: ['Nails & Waxing'], rating: 4.6, reviewCount: 210, experience: 3, isAvailable: true, photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80' },
   ],
   default: [
-    { id: 'st1', salonId: '', name: 'Rahul Mehta',  bio: 'Senior stylist', specialization: 'Hair',    rating: 4.9, totalBookings: 520, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
-    { id: 'st2', salonId: '', name: 'Anjali Patel', bio: 'Skin specialist', specialization: 'Facials', rating: 4.8, totalBookings: 390, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
-    { id: 'st3', salonId: '', name: 'Neha Joshi',   bio: 'Nail expert',     specialization: 'Nails',   rating: 4.7, totalBookings: 210, isAvailable: true,  avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st1', name: 'Rahul Mehta', designation: 'Senior stylist', specializations: ['Hair'], rating: 4.9, reviewCount: 520, experience: 8, isAvailable: true, photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st2', name: 'Anjali Patel', designation: 'Skin specialist', specializations: ['Facials'], rating: 4.8, reviewCount: 390, experience: 5, isAvailable: true, photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+    { id: 'st3', name: 'Neha Joshi', designation: 'Nail expert', specializations: ['Nails'], rating: 4.7, reviewCount: 210, experience: 3, isAvailable: true, photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80' },
   ],
 };
 
@@ -154,44 +153,34 @@ export const DEMO_REVIEWS: Review[] = [
 
 export const DEMO_BOOKINGS: (Booking & { salonName: string; serviceNames: string[] })[] = [
   {
-    id: 'b1', userId: 'u1', salonId: 's1', staffId: 'st1',
-    bookingDate: '2024-02-15', startTime: '10:00', endTime: '10:45',
-    status: BookingStatus.CONFIRMED, totalAmount: 500, discountAmount: 0, finalAmount: 590,
-    paymentStatus: PaymentStatus.SUCCESS,
-    salonName: 'Hair Ahmedabad', serviceNames: ['Haircut'],
-    salon: DEMO_SALONS[0],
+    id: 'b1', salonId: 's1', salonName: 'Hair Ahmedabad', salonImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80',
+    services: [DEMO_SERVICES.s1[0]], staff: DEMO_STAFF.s1[0], date: '2024-02-15', time: '10:00',
+    status: 'confirmed', totalAmount: 590, paymentStatus: 'SUCCESS', paymentMethod: 'upi', createdAt: '2024-01-01T00:00:00Z',
+    serviceNames: ['Haircut'],
   },
   {
-    id: 'b2', userId: 'u1', salonId: 's2', staffId: 'st2',
-    bookingDate: '2024-02-18', startTime: '14:00', endTime: '15:30',
-    status: BookingStatus.PENDING_PAYMENT, totalAmount: 1200, discountAmount: 0, finalAmount: 1416,
-    paymentStatus: PaymentStatus.PENDING,
-    salonName: 'Glam Studio', serviceNames: ['Full Body Massage'],
-    salon: DEMO_SALONS[1],
+    id: 'b2', salonId: 's2', salonName: 'Glam Studio', salonImage: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=400&q=80',
+    services: [DEMO_SERVICES.default[5]], staff: DEMO_STAFF.default[1], date: '2024-02-18', time: '14:00',
+    status: 'pending', totalAmount: 1416, paymentStatus: 'PENDING', paymentMethod: 'card', createdAt: '2024-01-02T00:00:00Z',
+    serviceNames: ['Full Body Massage'],
   },
   {
-    id: 'b3', userId: 'u1', salonId: 's1', staffId: 'st2',
-    bookingDate: '2024-01-10', startTime: '11:00', endTime: '12:00',
-    status: BookingStatus.COMPLETED, totalAmount: 1200, discountAmount: 120, finalAmount: 1286,
-    paymentStatus: PaymentStatus.SUCCESS,
-    salonName: 'Hair Ahmedabad', serviceNames: ['Facial', 'Manicure'],
-    salon: DEMO_SALONS[0],
+    id: 'b3', salonId: 's1', salonName: 'Hair Ahmedabad', salonImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80',
+    services: [DEMO_SERVICES.s1[4], DEMO_SERVICES.s1[7]], staff: DEMO_STAFF.s1[1], date: '2024-01-10', time: '11:00',
+    status: 'completed', totalAmount: 1286, paymentStatus: 'SUCCESS', paymentMethod: 'card', createdAt: '2024-01-03T00:00:00Z',
+    serviceNames: ['Facial', 'Manicure'], discountAmount: 120,
   },
   {
-    id: 'b4', userId: 'u1', salonId: 's1',
-    bookingDate: '2024-01-05', startTime: '15:00', endTime: '17:00',
-    status: BookingStatus.COMPLETED, totalAmount: 2000, discountAmount: 0, finalAmount: 2360,
-    paymentStatus: PaymentStatus.SUCCESS,
-    salonName: 'Hair Ahmedabad', serviceNames: ['Hair Coloring'],
-    salon: DEMO_SALONS[0],
+    id: 'b4', salonId: 's1', salonName: 'Hair Ahmedabad', salonImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80',
+    services: [DEMO_SERVICES.s1[1]], staff: DEMO_STAFF.s1[0], date: '2024-01-05', time: '15:00',
+    status: 'completed', totalAmount: 2360, paymentStatus: 'SUCCESS', paymentMethod: 'upi', createdAt: '2024-01-04T00:00:00Z',
+    serviceNames: ['Hair Coloring'],
   },
   {
-    id: 'b5', userId: 'u1', salonId: 's3',
-    bookingDate: '2024-01-08', startTime: '16:00', endTime: '17:30',
-    status: BookingStatus.CANCELLED, totalAmount: 1500, discountAmount: 0, finalAmount: 1770,
-    paymentStatus: PaymentStatus.REFUNDED,
-    salonName: 'Serenity Spa & Salon', serviceNames: ['Spa'],
-    salon: DEMO_SALONS[2],
+    id: 'b5', salonId: 's3', salonName: 'Serenity Spa & Salon', salonImage: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=400&q=80',
+    services: [DEMO_SERVICES.default[4]], staff: DEMO_STAFF.default[0], date: '2024-01-08', time: '16:00',
+    status: 'cancelled', totalAmount: 1770, paymentStatus: 'REFUNDED', paymentMethod: 'netbanking', createdAt: '2024-01-05T00:00:00Z',
+    serviceNames: ['Spa'],
   },
 ];
 

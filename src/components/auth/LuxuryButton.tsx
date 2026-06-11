@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated, ActivityIndicator } from 'react-native';
-import { designTokens } from '@/theme/tokens';
+import { designTokens } from '../../screens/home/theme/tokens';
 
 interface LuxuryButtonProps {
   title: string;
@@ -51,7 +51,7 @@ export const LuxuryButton: React.FC<LuxuryButtonProps> = ({ title, onPress, load
 const styles = StyleSheet.create({
   button: {
     height: 56,
-    backgroundColor: designTokens.colors.gray,
+    backgroundColor: '#FF5C8A',
     borderRadius: designTokens.borderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: designTokens.typography.sizes.button,
     fontWeight: designTokens.typography.weights.semibold,
-    color: designTokens.colors.white,
+    color: '#0F172A',
   },
 });

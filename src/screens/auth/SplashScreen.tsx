@@ -1,9 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { Animated, View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '@/types/navigation';
-import { designTokens } from '@/theme/tokens';
+import { AuthStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
@@ -26,16 +25,13 @@ export default function SplashScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#2A1F1A', '#1A1A1A']}
-        style={styles.background}
-      />
-      
+      <LinearGradient colors={['#3A4037', '#FF5C8A']} style={styles.gradient} />
+
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Text style={styles.logo}>HAIR AHMEDABAD</Text>
-        <Text style={styles.tagline}>Premium Salon Experience</Text>
+        <Text style={styles.logoText}>HAIR AHMEDABAD</Text>
+        <Text style={styles.taglineText}>Premium Salon Experience</Text>
         <View style={styles.divider} />
-        <Text style={styles.location}>Ahmedabad, Gujarat</Text>
+        <Text style={styles.locationText}>Ahmedabad, Gujarat</Text>
       </Animated.View>
     </View>
   );
@@ -44,29 +40,33 @@ export default function SplashScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: designTokens.colors.dark,
+    backgroundColor: '#1A1B2E',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  background: {
-    ...StyleSheet.absoluteFillObject,
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   content: {
     alignItems: 'center',
-    paddingHorizontal: designTokens.spacing.lg,
+    paddingHorizontal: 24,
   },
-  logo: {
+  logoText: {
     fontSize: 42,
-    fontWeight: designTokens.typography.weights.bold,
-    color: designTokens.colors.primary,
+    fontWeight: '800',
+    color: '#FF5C8A',
     letterSpacing: 3,
     textAlign: 'center',
-    marginBottom: designTokens.spacing.md,
+    marginBottom: 16,
   },
-  tagline: {
+  taglineText: {
     fontSize: 16,
-    fontWeight: designTokens.typography.weights.regular,
-    color: designTokens.colors.white,
+    fontWeight: '400',
+    color: '#FFFFFF',
     opacity: 0.8,
     textAlign: 'center',
     letterSpacing: 1,
@@ -74,13 +74,13 @@ const styles = StyleSheet.create({
   divider: {
     width: 60,
     height: 2,
-    backgroundColor: designTokens.colors.primary,
-    marginVertical: designTokens.spacing.lg,
+    backgroundColor: '#FF5C8A',
+    marginVertical: 24,
     opacity: 0.5,
   },
-  location: {
+  locationText: {
     fontSize: 13,
-    color: designTokens.colors.textSubtle,
+    color: '#94A3B8',
     textAlign: 'center',
   },
 });

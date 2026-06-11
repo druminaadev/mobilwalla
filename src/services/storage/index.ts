@@ -1,47 +1,44 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '@/constants/config';
+
+// ── Secure token storage (using AsyncStorage for now) ──────────────────────────
+
+export const secureStorage = {
+  async setAccessToken(token: string): Promise<void> {
+    await AsyncStorage.setItem('ACCESS_TOKEN', token);
+  },
+  async getAccessToken(): Promise<string | null> {
+    return AsyncStorage.getItem('ACCESS_TOKEN');
+  },
+  async setRefreshToken(token: string): Promise<void> {
+    await AsyncStorage.setItem('REFRESH_TOKEN', token);
+  },
+  async getRefreshToken(): Promise<string | null> {
+    return AsyncStorage.getItem('REFRESH_TOKEN');
+  },
+  async clearTokens(): Promise<void> {
+    await AsyncStorage.removeItem('ACCESS_TOKEN');
+    await AsyncStorage.removeItem('REFRESH_TOKEN');
+  },
+};
+
+// ── Non-sensitive storage (AsyncStorage) ────────────────────────────────────
 
 class StorageService {
-  async setAccessToken(token: string): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-  }
-
-  async getAccessToken(): Promise<string | null> {
-    return AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-  }
-
-  async setRefreshToken(token: string): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
-  }
-
-  async getRefreshToken(): Promise<string | null> {
-    return AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-  }
-
-  async clearTokens(): Promise<void> {
-    await AsyncStorage.multiRemove([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN]);
-  }
-
   setItem(key: string, value: string): void {
     AsyncStorage.setItem(key, value);
-  }
-
-  getItem(key: string): string | null {
-    // Note: AsyncStorage is async — use getItemAsync for await support
-    return null; // synchronous reads not supported; use getItemAsync instead
   }
 
   async getItemAsync(key: string): Promise<string | null> {
     return AsyncStorage.getItem(key);
   }
 
-  setObject(key: string, value: any): void {
+  setObject(key: string, value: unknown): void {
     AsyncStorage.setItem(key, JSON.stringify(value));
   }
 
   async getObject<T>(key: string): Promise<T | null> {
-    const value = await AsyncStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    const raw = await AsyncStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
   }
 
   removeItem(key: string): void {

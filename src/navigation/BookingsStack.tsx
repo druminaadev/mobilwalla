@@ -1,21 +1,25 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BookingsStackParamList } from '@/types/navigation';
+import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { BookingsStackParamList } from "@/types/navigation";
 
-import BookingListScreen from '@/screens/bookings/BookingListScreen';
-import BookingDetailScreen from '@/screens/bookings/BookingDetailScreen';
-import RescheduleScreen from '@/screens/bookings/RescheduleScreen';
-import WriteReviewScreen from '@/screens/bookings/WriteReviewScreen';
+import BookingListScreen from "@/screens/bookings/BookingListScreen";
+import BookingDetailScreen from "@/screens/bookings/BookingDetailScreen";
+import RescheduleScreen from "@/screens/bookings/RescheduleScreen";
+import WriteReviewScreen from "@/screens/bookings/WriteReviewScreen";
+import MyBookingsScreen from "@/screens/bookings/MyBookingsScreen";
+import EReceiptScreen from "@/screens/bookings/EReceiptScreen";
 
 const Stack = createNativeStackNavigator<BookingsStackParamList>();
 
 export default function BookingsStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
       <Stack.Screen name="BookingList" component={BookingListScreen} />
       <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
       <Stack.Screen name="Reschedule" component={RescheduleScreen} />
       <Stack.Screen name="WriteReview" component={WriteReviewScreen} />
+      <Stack.Screen name="EReceipt" component={EReceiptScreen} />
     </Stack.Navigator>
   );
 }

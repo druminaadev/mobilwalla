@@ -1,0 +1,60 @@
+src/components/salon/SalonCard.tsx(22,17): error TS2345: Argument of type '{ id: string; name: string; address: string; rating: number; image: string; }' is not assignable to parameter of type 'WishlistSalon'.
+  Property 'priceRange' is missing in type '{ id: string; name: string; address: string; rating: number; image: string; }' but required in type 'WishlistSalon'.
+src/screens/booking/BookingSuccessScreen.tsx(37,5): error TS2339: Property 'time' does not exist on type 'BookingState'.
+src/screens/booking/BookingSuccessScreen.tsx(41,5): error TS2339: Property 'clearBooking' does not exist on type 'BookingState'.
+src/screens/booking/BookingSuccessScreen.tsx(122,19): error TS2551: Property 'specialization' does not exist on type 'Staff'. Did you mean 'specializations'?
+src/screens/booking/ServiceSelectionScreen.tsx(42,76): error TS2339: Property 'clearBooking' does not exist on type 'BookingState'.
+src/screens/bookings/BookingDetailScreen.tsx(17,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingDetailScreen.tsx(18,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingDetailScreen.tsx(19,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingDetailScreen.tsx(20,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingDetailScreen.tsx(31,18): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/BookingDetailScreen.tsx(31,36): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/BookingDetailScreen.tsx(40,25): error TS2551: Property 'staffId' does not exist on type 'Booking'. Did you mean 'staff'?
+src/screens/bookings/BookingDetailScreen.tsx(40,93): error TS2551: Property 'staffId' does not exist on type 'Booking'. Did you mean 'staff'?
+src/screens/bookings/BookingListScreen.tsx(18,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(19,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(20,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(21,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(22,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(23,4): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(37,43): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(37,68): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(37,99): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(38,56): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(39,25): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(39,65): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(43,70): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/bookings/BookingListScreen.tsx(58,46): error TS2339: Property 'finalAmount' does not exist on type 'Booking & { salonName: string; serviceNames: string[]; }'.
+src/screens/bookings/BookingListScreen.tsx(70,32): error TS2339: Property 'bookingDate' does not exist on type 'Booking & { salonName: string; serviceNames: string[]; }'.
+src/screens/bookings/BookingListScreen.tsx(76,51): error TS2339: Property 'startTime' does not exist on type 'Booking & { salonName: string; serviceNames: string[]; }'.
+src/screens/bookings/EReceiptScreen.tsx(79,18): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/EReceiptScreen.tsx(79,36): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/EReceiptScreen.tsx(89,66): error TS2551: Property 'staffId' does not exist on type 'Booking'. Did you mean 'staff'?
+src/screens/bookings/MyBookingsScreen.tsx(143,24): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/MyBookingsScreen.tsx(154,24): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/MyBookingsScreen.tsx(165,24): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/bookings/RescheduleScreen.tsx(35,5): error TS2322: Type '"upcoming"' is not assignable to type 'BookingStatus'.
+src/screens/bookings/WriteReviewScreen.tsx(26,16): error TS2740: Type 'Service[]' is missing the following properties from type 'Service': id, name, description, category, and 3 more.
+src/screens/home/HomeScreen.tsx(145,25): error TS2693: 'BookingStatus' only refers to a type, but is being used as a value here.
+src/screens/home/HomeScreen.tsx(290,49): error TS2339: Property 'bookingDate' does not exist on type 'Booking & { salonName: string; serviceNames: string[]; }'.
+src/screens/home/HomeScreen.tsx(290,149): error TS2339: Property 'startTime' does not exist on type 'Booking & { salonName: string; serviceNames: string[]; }'.
+src/screens/home/SalonDetailScreen.tsx(28,63): error TS2551: Property 'categoryId' does not exist on type 'Service'. Did you mean 'category'?
+src/screens/home/SalonDetailScreen.tsx(125,45): error TS2551: Property 'categoryId' does not exist on type 'Service'. Did you mean 'category'?
+src/screens/home/SalonDetailScreen.tsx(167,60): error TS2551: Property 'specialization' does not exist on type 'Staff'. Did you mean 'specializations'?
+src/screens/home/SalonDetailScreen.tsx(170,84): error TS2339: Property 'totalBookings' does not exist on type 'Staff'.
+src/screens/home/WishlistScreen.tsx(101,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: FlatListProps<WishlistSalon>): FlatList<WishlistSalon>', gave the following error.
+    Type 'WishlistSalon[] | WishlistService[]' is not assignable to type 'ArrayLike<WishlistSalon> | null | undefined'.
+      Type 'WishlistService[]' is not assignable to type 'ArrayLike<WishlistSalon>'.
+        'number' index signatures are incompatible.
+          Type 'WishlistService' is missing the following properties from type 'WishlistSalon': rating, address, priceRange
+  Overload 2 of 2, '(props: FlatListProps<WishlistSalon>, context: any): FlatList<WishlistSalon>', gave the following error.
+    Type 'WishlistSalon[] | WishlistService[]' is not assignable to type 'ArrayLike<WishlistSalon> | null | undefined'.
+      Type 'WishlistService[]' is not assignable to type 'ArrayLike<WishlistSalon>'.
+        'number' index signatures are incompatible.
+          Type 'WishlistService' is missing the following properties from type 'WishlistSalon': rating, address, priceRange
+src/screens/profile/ProfileScreen.tsx(9,30): error TS2307: Cannot find module '@/store/dataStore' or its corresponding type declarations.
+src/screens/profile/ProfileScreen.tsx(26,52): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/screens/profile/ProfileScreen.tsx(29,39): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/screens/services/ServicesScreen.tsx(15,10): error TS2305: Module '"../../types/models"' has no exported member 'SalonService'.

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Camera } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import { colors } from '../../constants/colors';
 
 interface ProfileCardProps {
   name: string;
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   avatarGlow: {
     padding: 4,
     borderRadius: 60,
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#EEF1ED',
   },
   avatar: {
     width: 100,
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#FF5C8A',
     borderWidth: 3,
     borderColor: 'white',
   },
@@ -82,12 +82,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#FF5C8A',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
     borderColor: 'white',
-    shadowColor: '#000',
+    shadowColor: '#FF5C8A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

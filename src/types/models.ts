@@ -10,22 +10,11 @@ export enum UserStatus {
   SUSPENDED = 'SUSPENDED',
 }
 
-export enum BookingStatus {
-  DRAFT = 'DRAFT',
-  PENDING_PAYMENT = 'PENDING_PAYMENT',
-  CONFIRMED = 'CONFIRMED',
-  CHECKED_IN = 'CHECKED_IN',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  NO_SHOW = 'NO_SHOW',
-}
+export type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled';
 
-export enum PaymentStatus {
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
-}
+export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+
+export type PaymentMethod = 'upi' | 'card' | 'netbanking' | 'wallet' | 'cash';
 
 export interface User {
   id: string;
@@ -33,8 +22,10 @@ export interface User {
   name?: string;
   email?: string;
   avatarUrl?: string;
+  avatar?: string;
   dateOfBirth?: string;
-  gender?: 'MALE' | 'FEMALE';
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  bio?: string;
   role: UserRole;
   status: UserStatus;
   createdAt: string;
@@ -42,15 +33,25 @@ export interface User {
 
 export interface Address {
   id: string;
-  label?: string;
-  addressLine1: string;
-  addressLine2?: string;
+  line1: string;
+  line2?: string;
   city: string;
   state: string;
   pincode: string;
+  type: 'home' | 'work' | 'other';
+  isDefault: boolean;
   latitude?: number;
   longitude?: number;
-  isDefault: boolean;
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'booking' | 'promo' | 'system';
+  title: string;
+  subtitle: string;
+  timestamp: Date;
+  isRead: boolean;
+  deepLink?: string;
 }
 
 export interface Salon {
@@ -71,60 +72,67 @@ export interface Salon {
   distance?: number;
 }
 
-export interface SalonService {
+export interface Service {
   id: string;
-  salonId: string;
-  categoryId: string;
   name: string;
-  description?: string;
-  price: number;
+  description: string;
+  category: string;
   duration: number;
-  imageUrl?: string;
-  isActive: boolean;
+  price: number;
+  discountedPrice?: number;
+  image: string;
+  isPopular?: boolean;
+  isNew?: boolean;
+  tags?: string[];
 }
 
 export interface Staff {
   id: string;
-  salonId: string;
   name: string;
-  avatarUrl?: string;
-  bio?: string;
-  specialization?: string;
+  designation: string;
+  photo: string;
   rating: number;
-  totalBookings: number;
+  reviewCount: number;
+  experience: number;
+  specializations: string[];
   isAvailable: boolean;
+  nextAvailable?: string;
+  premiumCharge?: number;
 }
 
 export interface TimeSlot {
-  startTime: string;
-  endTime: string;
+  id: string;
+  time: string;
   isAvailable: boolean;
+  isPast: boolean;
+}
+
+export interface Coupon {
+  code: string;
+  discountType: 'flat' | 'percent';
+  discountValue: number;
+  maxDiscount?: number;
+  minOrderValue?: number;
 }
 
 export interface Booking {
   id: string;
-  userId: string;
   salonId: string;
-  staffId?: string;
-  bookingDate: string;
-  startTime: string;
-  endTime: string;
+  salonName: string;
+  salonImage: string;
+  services: Service[];
+  staff: Staff | null;
+  date: string;
+  time: string;
   status: BookingStatus;
   totalAmount: number;
-  discountAmount: number;
-  finalAmount: number;
   paymentStatus: PaymentStatus;
-  salon?: Salon;
-  staff?: Staff;
-  services?: BookingService[];
-}
-
-export interface BookingService {
-  id: string;
-  serviceId: string;
-  service?: SalonService;
-  price: number;
-  duration: number;
+  paymentMethod: PaymentMethod | null;
+  createdAt: string;
+  specialInstructions?: string;
+  couponCode?: string;
+  discountAmount?: number;
+  cancellationReason?: string;
 }
 
 export interface Wallet {
@@ -157,7 +165,25 @@ export interface Notification {
   type: string;
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, string>;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface WishlistSalon {
+  id: string;
+  name: string;
+  image: string;
+  rating: number;
+  address: string;
+  reviewCount: number;
+}
+
+export interface WishlistService {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  duration: number;
+  image: string;
 }

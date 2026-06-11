@@ -1,0 +1,300 @@
+    📱 SALON BOOKING - CUSTOMER MOBILE APP
+    =====================================
+
+    Project Root: customer-mobile/
+    React Native + Expo 54 + TypeScript
+
+    📁 PROJECT STRUCTURE
+    ====================
+
+    customer-mobile/
+    │
+    ├── 📄 Configuration Files
+    │   ├── package.json              # Dependencies & scripts
+    │   ├── app.json                  # Expo configuration
+    │   ├── tsconfig.json             # TypeScript config
+    │   ├── babel.config.js           # Babel config
+    │   ├── metro.config.js           # Metro bundler config
+    │   ├── index.js                  # App entry point
+    │   └── App.tsx                   # Root component
+    │
+    ├── 📁 assets/                    # Static assets
+    │   ├── images/                   # Images
+    │   ├── icons/                    # Icons
+    │   ├── onboarding/               # Onboarding screens
+    │   ├── patterns/                 # Background patterns
+    │   ├── salon/                    # Salon images
+    │   ├── icon.png                  # App icon
+    │   ├── splash.png                # Splash screen
+    │   └── adaptive-icon.png         # Android adaptive icon
+    │
+    └── 📁 src/                       # Source code
+        │
+        ├── 📁 components/            # Reusable UI components
+        │   │
+        │   ├── 📁 auth/              # Authentication components
+        │   │   ├── AuthButton.tsx
+        │   │   ├── AuthDivider.tsx
+        │   │   ├── AuthHeroLayout.tsx
+        │   │   ├── AuthInput.tsx
+        │   │   ├── Checkbox.tsx
+        │   │   ├── GlassContainer.tsx     # Glassmorphism wrapper
+        │   │   ├── LuxuryButton.tsx       # Premium animated button
+        │   │   ├── LuxuryInput.tsx        # Styled text input
+        │   │   ├── OTPBoxInput.tsx        # OTP input boxes
+        │   │   ├── PasswordInput.tsx
+        │   │   ├── SocialButton.tsx
+        │   │   └── index.ts
+        │   │
+        │   ├── 📁 booking/           # Booking components
+        │   │   ├── BookingCard.tsx        # Booking list item
+        │   │   └── BookingProgress.tsx    # Step progress indicator
+        │   │
+        │   ├── 📁 common/            # Common UI components
+        │   │   ├── Button.tsx             # Generic button
+        │   │   ├── Card.tsx               # Pressable card
+        │   │   ├── Input.tsx              # Generic input
+        │   │   ├── Skeleton.tsx           # Skeleton loader
+        │   │   └── DesignSystem.tsx       # Design system demo
+        │   │
+        │   ├── 📁 layout/            # Layout components
+        │   │   └── ScreenHeader.tsx       # Shared screen header
+        │   │
+        │   ├── 📁 offers/            # Offer components
+        │   │   ├── DecorativeDots.tsx
+        │   │   ├── DecorativeWave.tsx
+        │   │   ├── OfferCard.tsx
+        │   │   ├── PercentBadge.tsx
+        │   │   └── index.ts
+        │   │
+        │   ├── 📁 onboarding/        # Onboarding components
+        │   │   ├── BottomCard.tsx
+        │   │   ├── HighlightHeading.tsx
+        │   │   ├── NavigationButtons.tsx
+        │   │   ├── PaginationDots.tsx
+        │   │   └── index.ts
+        │   │
+        │   ├── 📁 profile/           # Profile components
+        │   │   ├── MenuButton.tsx         # Profile menu row
+        │   │   ├── ProfileCard.tsx        # User info card
+        │   │   ├── StatsCard.tsx          # Booking stats
+        │   │   └── index.ts
+        │   │
+        │   └── 📁 salon/             # Salon components
+        │       └── SalonCard.tsx          # Salon discovery card
+        │
+        ├── 📁 constants/             # App-wide constants
+        │   ├── auth.ts                    # Auth constants
+        │   ├── colors.ts                  # Color palette
+        │   ├── config.ts                  # App config
+        │   ├── ds.ts                      # Design system tokens
+        │   ├── onboarding.ts              # Onboarding data
+        │   ├── spacing.ts                 # Spacing scale
+        │   └── typography.ts              # Font styles
+        │
+        ├── 📁 data/                  # Mock data
+        │   └── demo.ts                    # All demo data (salons, services, staff)
+        │
+        ├── 📁 hooks/                 # Custom hooks
+        │   └── useBooking.ts              # Booking utility hook
+        │
+        ├── 📁 navigation/            # Navigation structure
+        │   ├── index.tsx                  # Root navigator
+        │   ├── AuthStack.tsx              # Splash → Login → OTP
+        │   ├── MainStack.tsx              # Bottom tabs (5 tabs)
+        │   ├── HomeStack.tsx              # Home + booking flow
+        │   ├── ServicesStack.tsx          # Services catalogue
+        │   ├── BookingsStack.tsx          # Appointments
+        │   ├── OffersStack.tsx            # Offers & deals
+        │   ├── ShopStack.tsx              # Products shop
+        │   ├── ProfileStack.tsx           # Profile & settings
+        │   └── linking.ts                 # Deep linking config
+        │
+        ├── 📁 screens/               # All app screens
+        │   │
+        │   ├── 📁 auth/              # Authentication screens
+        │   │   ├── SplashScreen.tsx       # Animated splash
+        │   │   ├── OnboardingScreen.tsx   # App intro
+        │   │   ├── LoginScreen.tsx        # Phone login
+        │   │   ├── SignUpScreen.tsx       # Registration
+        │   │   ├── OTPScreen.tsx          # OTP verification
+        │   │   └── AuthSuccessScreen.tsx  # Success confirmation
+        │   │
+        │   ├── 📁 home/              # Home & discovery
+        │   │   ├── HomeScreen.tsx         # Main feed (FIXED ✅)
+        │   │   ├── SearchScreen.tsx       # Search salons/services
+        │   │   ├── SalonListScreen.tsx    # Salon listing
+        │   │   ├── SalonDetailScreen.tsx  # Salon details
+        │   │   ├── OffersScreen.tsx       # All offers
+        │   │   ├── SpecialForYouScreen.tsx # Personalized offers
+        │   │   └── WishlistScreen.tsx     # Saved salons
+        │   │
+        │   ├── 📁 booking/           # 4-step booking wizard
+        │   │   ├── ServiceSelectionScreen.tsx  # Step 1: Pick services
+        │   │   ├── StaffSelectionScreen.tsx    # Step 2: Pick staff
+        │   │   ├── SlotSelectionScreen.tsx     # Step 3: Pick date/time
+        │   │   ├── BookingSummaryScreen.tsx    # Step 4: Review
+        │   │   ├── PaymentScreen.tsx           # Payment gateway
+        │   │   └── BookingSuccessScreen.tsx    # Confirmation
+        │   │
+        │   ├── 📁 bookings/          # Appointment management
+        │   │   ├── MyBookingsScreen.tsx        # All bookings tab
+        │   │   ├── BookingListScreen.tsx       # Upcoming/Past/Cancelled
+        │   │   ├── BookingDetailScreen.tsx     # Full booking details
+        │   │   ├── RescheduleScreen.tsx        # Change date/time
+        │   │   ├── WriteReviewScreen.tsx       # Star rating + comment
+        │   │   └── EReceiptScreen.tsx          # Digital receipt
+        │   │
+        │   ├── 📁 services/          # Services catalogue
+        │   │   ├── ServicesScreen.tsx          # All services grid
+        │   │   ├── ServiceDetailScreen.tsx     # Service info
+        │   │   └── HairServicesScreen.tsx      # Category view
+        │   │
+        │   ├── 📁 wallet/            # Wallet & payments
+        │   │   ├── WalletHomeScreen.tsx        # Balance & quick actions
+        │   │   ├── AddMoneyScreen.tsx          # Top-up wallet
+        │   │   ├── TransactionHistoryScreen.tsx # All transactions
+        │   │   ├── MyCouponScreen.tsx          # Saved coupons
+        │   │   └── ReferralScreen.tsx          # Referral program
+        │   │
+        │   ├── 📁 profile/           # User profile
+        │   │   ├── ProfileScreen.tsx           # Main profile
+        │   │   ├── EditProfileScreen.tsx       # Edit details
+        │   │   ├── AddressesScreen.tsx         # Saved addresses
+        │   │   ├── AddAddressScreen.tsx        # Add/edit address
+        │   │   ├── SettingsScreen.tsx          # App settings
+        │   │   ├── NotificationsScreen.tsx     # All notifications
+        │   │   └── HelpScreen.tsx              # FAQs & support
+        │   │
+        │   ├── 📁 shop/              # Product shop
+        │   │   ├── ShopHomeScreen.tsx          # Product catalogue
+        │   │   ├── ProductDetailScreen.tsx     # Product details
+        │   │   ├── CartScreen.tsx              # Shopping cart
+        │   │   ├── CheckoutScreen.tsx          # Order checkout
+        │   │   ├── OrderConfirmedScreen.tsx    # Order success
+        │   │   └── OrderTrackingScreen.tsx     # Track delivery
+        │   │
+        │   ├── 📁 offers/            # Offers & deals
+        │   │   └── SpecialForYouScreen.tsx
+        │   │
+        │   ├── 📁 gallery/           # Image gallery
+        │   │   ├── GalleryScreen.tsx
+        │   │   └── ImageViewerScreen.tsx
+        │   │
+        │   ├── 📁 team/              # Salon staff
+        │   │   ├── TeamScreen.tsx
+        │   │   └── ArtistProfileScreen.tsx
+        │   │
+        │   ├── 📁 reviews/           # Reviews
+        │   │   └── ReviewsScreen.tsx
+        │   │
+        │   ├── 📁 location/          # Location
+        │   │   └── LocationScreen.tsx
+        │   │
+        │   ├── 📁 support/           # Support
+        │   │   └── ChatbotScreen.tsx      # AI chatbot (FIXED ✅)
+        │   │
+        │   └── 📁 onboarding/        # Onboarding flow
+        │       ├── OnboardingFlow.tsx
+        │       ├── Onboarding1.tsx
+        │       ├── Onboarding2.tsx
+        │       ├── Onboarding3.tsx
+        │       ├── Onboarding4.tsx
+        │       ├── WelcomeScreen.tsx
+        │       ├── SeamlessBookingScreen.tsx
+        │       ├── InteractiveMapScreen.tsx
+        │       └── FavoriteSalonScreen.tsx
+        │
+        ├── 📁 services/              # API & Storage services
+        │   ├── api/
+        │   │   └── bookingApi.ts          # Booking API calls
+        │   └── storage/
+        │       └── index.ts               # AsyncStorage wrapper
+        │
+        ├── 📁 store/                 # Zustand state management
+        │   ├── authStore.ts               # Auth state (login, user)
+        │   ├── bookingStore.ts            # Active booking state
+        │   ├── notificationStore.ts       # Notifications
+        │   └── wishlistStore.ts           # Wishlist/favorites
+        │
+        ├── 📁 types/                 # TypeScript types
+        │   ├── api.ts                     # API types
+        │   ├── models.ts                  # Domain models
+        │   └── navigation.ts              # Navigation param lists
+        │
+        └── 📁 utils/                 # Utility functions
+            ├── device.ts                  # Device info
+            └── authValidation.ts          # Auth validators
+
+
+    🎨 KEY FEATURES
+    ===============
+
+    ✅ Full Authentication Flow (Phone + OTP)
+    ✅ Onboarding Screens with Animations
+    ✅ Salon Discovery & Search
+    ✅ 4-Step Booking Wizard
+    ✅ Appointment Management
+    ✅ Wallet & Payments
+    ✅ Product Shop
+    ✅ Real-time Chatbot Support
+    ✅ Gallery & Reviews
+    ✅ Profile & Settings
+    ✅ Push Notifications
+    ✅ Wishlist/Favorites
+    ✅ Address Management
+    ✅ Coupon & Referral System
+
+
+    🔧 ANIMATION FIXES APPLIED
+    ===========================
+
+    ✅ HomeScreen.tsx - Fixed useScrollViewOffset warning
+    ✅ HomeScreen.tsx - Fixed FAB animation
+    ✅ HomeScreen.tsx - Fixed skeleton loader
+    ✅ ChatbotScreen.tsx - Fixed typing indicator
+    ✅ ChatbotScreen.tsx - Fixed message animations
+    ✅ ChatbotScreen.tsx - Fixed input button swap
+
+
+    📦 KEY DEPENDENCIES
+    ===================
+
+    - React Native: 0.81.5
+    - Expo: ~54.0.0
+    - TypeScript: 5.9.2
+    - React Navigation: ^7.x
+    - Zustand: ^5.0.3
+    - Reanimated: ~4.1.1
+    - Axios: ^1.7.9
+    - Lucide Icons: ^0.469.0
+
+
+    🚀 COMMANDS
+    ===========
+
+    npm start          # Start Expo dev server
+    npm run ios        # Open iOS Simulator
+    npm run android    # Open Android Emulator
+    npm run clear      # Clear Metro cache
+    npm run lint       # Run ESLint
+    npm run type-check # TypeScript check
+
+
+    📝 DEMO CREDENTIALS
+    ===================
+
+    Phone: Any 10-digit number
+    OTP: 123456
+
+
+    ⚡ STATUS
+    =========
+
+    ✅ All screens implemented
+    ✅ All animations working
+    ✅ No Reanimated warnings
+    ✅ TypeScript strict mode
+    ✅ Demo mode fully functional
+    ✅ Ready for backend integration
+

@@ -4,10 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Calendar, Clock, Plus, ChevronRight, MapPin, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookingsStackParamList } from '@/types/navigation';
-import { DEMO_BOOKINGS } from '@/data/demo';
-import { BookingStatus } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { BookingsStackParamList } from '../../types/navigation';
+import { DEMO_BOOKINGS } from '../../data/demo';
+import { BookingStatus } from '../../types/models';
+import { colors } from '../../constants/colors';
 import { useNavigation } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<BookingsStackParamList, 'BookingList'>;
@@ -15,12 +15,12 @@ type Props = NativeStackScreenProps<BookingsStackParamList, 'BookingList'>;
 const TABS = ['Upcoming', 'Completed', 'Cancelled'];
 
 const STATUS_CONFIG: Record<string, { color: string, bg: string, label: string }> = {
-  [BookingStatus.CONFIRMED]: { color: '#3B82F6', bg: '#DBEAFE', label: 'Confirmed' },
-  [BookingStatus.PENDING_PAYMENT]: { color: '#F59E0B', bg: '#FEF3C7', label: 'Pending' },
-  [BookingStatus.COMPLETED]: { color: '#10B981', bg: '#D1FAE5', label: 'Completed' },
-  [BookingStatus.CANCELLED]: { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled' },
-  [BookingStatus.CHECKED_IN]: { color: '#8B5CF6', bg: '#EDE9FE', label: 'Checked In' },
-  [BookingStatus.NO_SHOW]: { color: '#64748B', bg: '#F1F5F9', label: 'No Show' },
+  'confirmed': { color: '#3B82F6', bg: '#DBEAFE', label: 'Confirmed' },
+  'pending': { color: '#F59E0B', bg: '#FEF3C7', label: 'Pending' },
+  'completed': { color: '#10B981', bg: '#D1FAE5', label: 'Completed' },
+  'cancelled': { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled' },
+  'in_progress': { color: '#8B5CF6', bg: '#EDE9FE', label: 'Checked In' },
+  'rescheduled': { color: '#64748B', bg: '#F1F5F9', label: 'No Show' },
 };
 
 export default function BookingListScreen({ navigation }: Props) {
@@ -31,16 +31,16 @@ export default function BookingListScreen({ navigation }: Props) {
 
   const handleFabPressIn  = () => Animated.spring(pressAnim, { toValue: 0.95, useNativeDriver: true }).start();
   const handleFabPressOut = () => Animated.spring(pressAnim, { toValue: 1,    useNativeDriver: true }).start();
-  const handleNewBooking  = () => rootNav.navigate('ServicesTab');
+  const handleNewBooking  = () => rootNav.navigate('HomeTab');
 
   const bookings = DEMO_BOOKINGS.filter((b) => {
-    if (activeTab === 'Upcoming') return [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT, BookingStatus.CHECKED_IN].includes(b.status);
-    if (activeTab === 'Completed') return b.status === BookingStatus.COMPLETED;
-    return b.status === BookingStatus.CANCELLED || b.status === BookingStatus.NO_SHOW;
+    if (activeTab === 'Upcoming') return ['confirmed', 'pending', 'in_progress'].includes(b.status);
+    if (activeTab === 'Completed') return b.status === 'completed';
+    return b.status === 'cancelled' || b.status === 'rescheduled';
   });
 
   const renderBooking = ({ item }: { item: typeof DEMO_BOOKINGS[0] }) => {
-    const statusConfig = STATUS_CONFIG[item.status] ?? STATUS_CONFIG[BookingStatus.CONFIRMED];
+    const statusConfig = STATUS_CONFIG[item.status] ?? STATUS_CONFIG['confirmed'];
     
     return (
       <TouchableOpacity 
@@ -55,7 +55,7 @@ export default function BookingListScreen({ navigation }: Props) {
               <Text style={[styles.statusText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
             </View>
           </View>
-          <Text style={styles.amount}>₹{item.finalAmount}</Text>
+          <Text style={styles.amount}>₹{item.totalAmount}</Text>
         </View>
 
         <Text style={styles.services} numberOfLines={2}>{item.serviceNames.join(' • ')}</Text>
@@ -67,13 +67,13 @@ export default function BookingListScreen({ navigation }: Props) {
             <View style={styles.metaItem}>
               <Calendar size={14} color={colors.textTertiary} />
               <Text style={styles.metaText}>
-                {new Date(item.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </Text>
             </View>
             <View style={styles.metaDot} />
             <View style={styles.metaItem}>
               <Clock size={14} color={colors.textTertiary} />
-              <Text style={styles.metaText}>{item.startTime}</Text>
+              <Text style={styles.metaText}>{item.time}</Text>
             </View>
           </View>
           
@@ -134,7 +134,7 @@ export default function BookingListScreen({ navigation }: Props) {
           onPressOut={handleFabPressOut}
           activeOpacity={0.9}
         >
-          <LinearGradient colors={['#3B82F6', '#1E40AF']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.fab}>
+          <LinearGradient colors={['#FF5C8A', '#FF3366']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.fab}>
             <Sparkles size={20} color="#fff" />
             <Text style={styles.fabText}>Book Service</Text>
           </LinearGradient>
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 14, color: colors.textSecondary, marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
 
   // FAB
-  fabWrap: { position: 'absolute', bottom: 30, alignSelf: 'center', shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
+  fabWrap: { position: 'absolute', bottom: 30, alignSelf: 'center', shadowColor: '#FF5C8A', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
   fab: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 32 },
   fabText: { fontSize: 16, fontWeight: '700', color: colors.white },
 });

@@ -10,28 +10,28 @@ import {
   Scissors, Smile, Zap, Droplets, Heart, Flower2, ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ServicesStackParamList } from '@/types/navigation';
-import { DEMO_SALONS, DEMO_SERVICES } from '@/data/demo';
-import { SalonService } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { ServicesStackParamList } from '../../types/navigation';
+import { DEMO_SALONS, DEMO_SERVICES } from '../../data/demo';
+import { Service } from '../../types/models';
+import { colors } from '../../constants/colors';
 
 type Props = NativeStackScreenProps<ServicesStackParamList, 'ServicesCatalogue'>;
 
 const { width } = Dimensions.get('window');
 
 const CATEGORIES = [
-  { id: 'all',    label: 'All',    Icon: Sparkles, color: '#3B82F6', bg: '#DBEAFE' },
-  { id: 'hair',   label: 'Hair',   Icon: Scissors, color: '#8B5CF6', bg: '#EDE9FE' },
-  { id: 'skin',   label: 'Skin',   Icon: Smile,    color: '#EC4899', bg: '#FCE7F3' },
+  { id: 'all',    label: 'All',    Icon: Sparkles, color: '#FF5C8A', bg: '#EEF1ED' },
+  { id: 'hair',   label: 'Hair',   Icon: Scissors, color: '#FF3366', bg: '#EEF1ED' },
+  { id: 'skin',   label: 'Skin',   Icon: Smile,    color: '#D9A355', bg: '#FDF3E0' },
   { id: 'body',   label: 'Body',   Icon: Zap,      color: '#14B8A6', bg: '#CCFBF1' },
   { id: 'nails',  label: 'Nails',  Icon: Droplets, color: '#F59E0B', bg: '#FEF3C7' },
   { id: 'makeup', label: 'Makeup', Icon: Flower2,  color: '#EF4444', bg: '#FEE2E2' },
   { id: 'spa',    label: 'Spa',    Icon: Heart,    color: '#10B981', bg: '#D1FAE5' },
 ];
 
-function getAllServices(): (SalonService & { salonName: string })[] {
+function getAllServices(): (Service & { salonName: string; salonId: string })[] {
   const seen = new Set<string>();
-  const result: (SalonService & { salonName: string })[] = [];
+  const result: (Service & { salonName: string; salonId: string })[] = [];
   DEMO_SALONS.forEach((salon) => {
     const services = DEMO_SERVICES[salon.id] ?? DEMO_SERVICES.default;
     services.forEach((svc) => {
@@ -77,8 +77,8 @@ function CategoryPill({
 }
 
 // ─── Service Card ─────────────────────────────────────────────────────────────
-function ServiceCard({ service, onBook, onDetail }: { service: SalonService & { salonName: string }; onBook: () => void; onDetail: () => void }) {
-  const cat = CATEGORIES.find((c) => c.id === service.categoryId) ?? CATEGORIES[0];
+function ServiceCard({ service, onBook, onDetail }: { service: Service & { salonName: string; salonId: string }; onBook: () => void; onDetail: () => void }) {
+  const cat = CATEGORIES.find((c) => c.id === service.category) ?? CATEGORIES[0];
 
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={onDetail} style={styles.card}>
@@ -109,7 +109,7 @@ function ServiceCard({ service, onBook, onDetail }: { service: SalonService & { 
 function FeaturedBanner({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.95} style={styles.bannerContainer}>
-      <LinearGradient colors={['#3B82F6', '#1E40AF']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.banner}>
+      <LinearGradient colors={['#FF5C8A', '#FF3366']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.banner}>
         <View style={styles.bannerContent}>
           <View style={styles.bannerBadge}>
             <Sparkles size={12} color={colors.white} />
@@ -139,19 +139,19 @@ export default function ServicesScreen({ navigation }: Props) {
 
   const filtered = useMemo(() =>
     allServices.filter((s) =>
-      (activeCat === 'all' || s.categoryId === activeCat) &&
+      (activeCat === 'all' || s.category === activeCat) &&
       (s.name.toLowerCase().includes(query.toLowerCase()) ||
        (s.description ?? '').toLowerCase().includes(query.toLowerCase()))
     ), [activeCat, query]);
 
-  const handleBook = (service: SalonService & { salonName: string }) => {
+  const handleBook = (service: Service & { salonName: string; salonId: string }) => {
     navigation.navigate('ServiceBooking', {
       salonId: service.salonId || DEMO_SALONS[0].id,
       preSelectedServiceId: service.id,
     });
   };
 
-  const handleDetail = (service: SalonService & { salonName: string }) => {
+  const handleDetail = (service: Service & { salonName: string; salonId: string }) => {
     navigation.navigate('ServiceDetail', { service });
   };
 

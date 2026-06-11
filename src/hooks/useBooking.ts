@@ -1,16 +1,79 @@
-import { DEMO_BOOKINGS, DEMO_SALONS, DEMO_SERVICES, DEMO_STAFF } from '@/data/demo';
-import { useBookingStore } from '@/store/bookingStore';
+import { useState } from 'react';
+import { bookingApi } from '../services/api/bookingApi';
+import { Booking } from '../types/models';
+import { useBookingStore } from '../store/bookingStore';
 
-export function useBooking(bookingId?: string) {
+export function useBooking() {
   const store = useBookingStore();
-  const booking = bookingId ? DEMO_BOOKINGS.find((b) => b.id === bookingId) : undefined;
-  const salon = booking ? DEMO_SALONS.find((s) => s.id === booking.salonId) : undefined;
-  return { booking, salon, store };
-}
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export function useSalon(salonId: string) {
-  const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
-  const services = DEMO_SERVICES[salonId] ?? DEMO_SERVICES.default;
-  const staff = DEMO_STAFF[salonId] ?? DEMO_STAFF.default;
-  return { salon, services, staff };
+  const submitBooking = async (): Promise<Booking | null> => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      const bookingData = {
+        salonId: store.salonId,
+        salonName: store.salonName,
+        salonImage: store.salonImage,
+        services: store.services,
+        staff: store.staff,
+        date: store.date,
+        time: store.timeSlot?.time,
+        totalAmount: store.getTotal(),
+        discountAmount: store.getDiscount(),
+        couponCode: store.coupon?.code,
+        specialInstructions: store.specialInstructions,
+      };
+
+      const result = await bookingApi.createBooking(bookingData);
+      
+      // On success, reset the store
+      store.resetBooking();
+      return result;
+    } catch (err: any) {
+      setError(err.message || 'Failed to create booking');
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const cancelBooking = async (bookingId: string, reason: string) => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await bookingApi.cancelBooking(bookingId, reason);
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Failed to cancel booking');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const rescheduleBooking = async (bookingId: string, date: string, time: string) => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await bookingApi.rescheduleBooking(bookingId, date, time);
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Failed to reschedule booking');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return {
+    submitBooking,
+    cancelBooking,
+    rescheduleBooking,
+    isSubmitting,
+    error,
+    store,
+  };
 }

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Phone, Mail, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { colors } from '@/constants/colors';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
 
 const FAQS = [
   { q: 'How do I book an appointment?', a: 'Browse salons on the Home screen, select a salon, choose your services, pick a date & time, then complete the payment.' },
@@ -27,32 +30,50 @@ export default function HelpScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <ScreenHeader title="Help & Support" onBack={() => navigation.goBack()} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        
         {/* Contact Cards */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Us</Text>
           <View style={styles.contactGrid}>
-            <TouchableOpacity style={styles.contactCard} onPress={() => contact('call')}>
-              <View style={[styles.contactIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Phone size={24} color={colors.success} />
-              </View>
-              <Text style={styles.contactLabel}>Call Us</Text>
-              <Text style={styles.contactValue}>+91 98765 43210</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.contactCard} onPress={() => contact('email')}>
-              <View style={[styles.contactIcon, { backgroundColor: colors.primaryLight }]}>
-                <Mail size={24} color={colors.primary} />
-              </View>
-              <Text style={styles.contactLabel}>Email</Text>
-              <Text style={styles.contactValue}>support@salon.com</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.contactCard} onPress={() => contact('chat')}>
-              <View style={[styles.contactIcon, { backgroundColor: '#FEF9C3' }]}>
-                <MessageCircle size={24} color={colors.warning} />
-              </View>
-              <Text style={styles.contactLabel}>Live Chat</Text>
-              <Text style={styles.contactValue}>Available 9AM–9PM</Text>
-            </TouchableOpacity>
+            
+            <Animated.View entering={FadeInDown.delay(100).springify()}>
+              <TouchableOpacity style={styles.contactCard} onPress={() => contact('call')} activeOpacity={0.8}>
+                <View style={[styles.contactIcon, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+                  <Phone size={24} color={colors.success} />
+                </View>
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactLabel}>Call Us</Text>
+                  <Text style={styles.contactValue}>+91 98765 43210</Text>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(150).springify()}>
+              <TouchableOpacity style={styles.contactCard} onPress={() => contact('email')} activeOpacity={0.8}>
+                <View style={[styles.contactIcon, { backgroundColor: colors.primaryLight }]}>
+                  <Mail size={24} color={colors.primary} />
+                </View>
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactLabel}>Email</Text>
+                  <Text style={styles.contactValue}>support@hairahmedabad.com</Text>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(200).springify()}>
+              <TouchableOpacity style={styles.contactCard} onPress={() => contact('chat')} activeOpacity={0.8}>
+                <View style={[styles.contactIcon, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                  <MessageCircle size={24} color={colors.warning} />
+                </View>
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactLabel}>Live Chat</Text>
+                  <Text style={styles.contactValue}>Available 9AM–9PM</Text>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+
           </View>
         </View>
 
@@ -60,13 +81,21 @@ export default function HelpScreen({ navigation }: any) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
           {FAQS.map((faq, i) => (
-            <TouchableOpacity key={i} style={styles.faqCard} onPress={() => toggle(i)} activeOpacity={0.8}>
-              <View style={styles.faqHeader}>
-                <Text style={[styles.faqQ, expanded === i && { color: colors.primary }]}>{faq.q}</Text>
-                {expanded === i ? <ChevronUp size={20} color={colors.primary} /> : <ChevronDown size={20} color={colors.textSecondary} />}
-              </View>
-              {expanded === i && <Text style={styles.faqA}>{faq.a}</Text>}
-            </TouchableOpacity>
+            <Animated.View key={i} layout={Layout.springify()} entering={FadeInDown.delay(300 + i * 50).springify()}>
+              <TouchableOpacity style={styles.faqCard} onPress={() => toggle(i)} activeOpacity={0.8}>
+                <View style={styles.faqHeader}>
+                  <Text style={[styles.faqQ, expanded === i && { color: colors.primary }]}>{faq.q}</Text>
+                  <View style={[styles.faqChevron, expanded === i && styles.faqChevronActive]}>
+                    {expanded === i ? <ChevronUp size={18} color={colors.white} /> : <ChevronDown size={18} color={colors.textSecondary} />}
+                  </View>
+                </View>
+                {expanded === i && (
+                  <Animated.Text entering={FadeInDown.duration(300)} style={styles.faqA}>
+                    {faq.a}
+                  </Animated.Text>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
           ))}
         </View>
 
@@ -79,18 +108,106 @@ export default function HelpScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  section: { padding: 20, paddingTop: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginBottom: 16, letterSpacing: -0.3 },
-  contactGrid: { gap: 12 },
-  contactCard: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16, backgroundColor: 'white', borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2, borderWidth: 1, borderColor: colors.border },
-  contactIcon: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
-  contactLabel: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  contactValue: { fontSize: 14, color: colors.textSecondary, fontWeight: '500', marginTop: 2 },
-  faqCard: { padding: 18, backgroundColor: 'white', borderRadius: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1, borderWidth: 1, borderColor: colors.border },
-  faqHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  faqQ: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, flex: 1, marginRight: 12, lineHeight: 22 },
-  faqA: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginTop: 12 },
-  footer: { padding: 24, alignItems: 'center' },
-  footerText: { fontSize: 12, color: colors.textTertiary },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingBottom: 40,
+  },
+  section: {
+    padding: 20,
+    paddingTop: 24,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+  contactGrid: {
+    gap: 12,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  contactIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactInfo: {
+    flex: 1,
+  },
+  contactLabel: {
+    ...typography.subtitle1,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  contactValue: {
+    ...typography.body2,
+    color: colors.textSecondary,
+  },
+  faqCard: {
+    padding: 18,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  faqHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  faqQ: {
+    ...typography.subtitle2,
+    color: colors.textPrimary,
+    flex: 1,
+    marginRight: 12,
+  },
+  faqChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faqChevronActive: {
+    backgroundColor: colors.primary,
+  },
+  faqA: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginTop: 12,
+  },
+  footer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  footerText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
 });

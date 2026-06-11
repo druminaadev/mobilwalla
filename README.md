@@ -1340,3 +1340,20 @@ Proprietary — All rights reserved by **Hair Ahmedabad**
 *For backend setup, see the `Backend-all-in-one/` directory.*  
 *For the CRM admin panel, see the `Crm-Frontend/` directory.*  
 *For the Instagram booking integration, see the `Instgram-bookings/` directory.*
+
+
+
+#606C5D
+#FFF4F4
+#F7E6C4
+#F1C376
+
+
+use thsi color as main color use it evary make look nice
+add skip button on bording page in upper right side corner
+also use this color code
+Emerald Green + Gold
+#0f465c
+#D4AF37
+#FAFAFA
+#1F2937

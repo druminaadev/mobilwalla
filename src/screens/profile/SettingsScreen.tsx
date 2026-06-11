@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Bell, Moon, Globe, Shield, FileText, Info, Trash2, ChevronRight } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { useAuthStore } from '@/store/authStore';
-import { colors } from '@/constants/colors';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { useAuthStore } from '../../store/authStore';
+import { colors } from '../../constants/colors';
 
 export default function SettingsScreen({ navigation }: any) {
   const logout = useAuthStore((s) => s.logout);

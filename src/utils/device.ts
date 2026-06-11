@@ -1,6 +1,6 @@
 import * as Application from 'expo-application';
 import { Platform } from 'react-native';
-import { storage } from '@/services/storage';
+import { storage } from '../services/storage';
 
 const DEVICE_ID_KEY = 'DEVICE_ID';
 
