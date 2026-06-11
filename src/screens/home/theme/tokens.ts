@@ -1,10 +1,10 @@
 export const designTokens = {
   colors: {
-    primary: '#D4AF37',
-    primaryGold: '#D4AF37',
+    primary: '#FF5C8A',
+    primaryGold: '#FF5C8A',
     dark: '#0F0F0F',
     gray: '#4F4F4F',
-    white: '#FFFFFF',
+    white: '#0F172A',
     glass: 'rgba(255,255,255,0.12)',
     glassBorder: 'rgba(255,255,255,0.2)',
     textLight: '#BDBDBD',

@@ -5,11 +5,11 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Home, Briefcase, MapPin } from 'lucide-react-native';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { ProfileStackParamList } from '@/types/navigation';
-import { colors } from '@/constants/colors';
+import { Input } from '../../components/common/Input';
+import { Button } from '../../components/common/Button';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { ProfileStackParamList } from '../../types/navigation';
+import { colors } from '../../constants/colors';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'AddAddress'>;
 

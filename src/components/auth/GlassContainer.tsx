@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { designTokens } from '@/theme/tokens';
+import { designTokens } from '../../screens/home/theme/tokens';
 
 interface GlassContainerProps {
   children: React.ReactNode;

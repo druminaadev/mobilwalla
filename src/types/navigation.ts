@@ -9,12 +9,15 @@ export type AuthStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
   Login: undefined;
-  OTPVerification: { phone: string };
+  SignUp: undefined;
+  OTPVerification: { phone: string; mode: 'login' | 'signup' };
+  AuthSuccess: undefined;
 };
 
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
   ServicesTab: NavigatorScreenParams<ServicesStackParamList>;
+  OffersTab: NavigatorScreenParams<{ OffersList: undefined; SalonList: Record<string, never>; ServiceSelection: { salonId: string }; StaffSelection: { salonId: string }; SlotSelection: { salonId: string; staffId?: string | null }; BookingSummary: { salonId: string; staffId?: string | null; date: string; time: string }; Payment: { bookingData: Record<string, string> }; BookingSuccess: { bookingId: string } }>;
   BookingsTab: NavigatorScreenParams<BookingsStackParamList>;
   ShopTab: NavigatorScreenParams<ShopStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
@@ -22,8 +25,13 @@ export type MainTabParamList = {
 
 export type ServicesStackParamList = {
   ServicesCatalogue: undefined;
-  ServiceDetail: { service: any };
+  ServiceDetail: { service: Record<string, string> };
   ServiceBooking: { salonId: string; preSelectedServiceId?: string };
+  StaffSelection: { salonId: string };
+  SlotSelection: { salonId: string; staffId?: string | null };
+  BookingSummary: { salonId: string; staffId?: string | null; date: string; time: string };
+  Payment: { bookingData: Record<string, string> };
+  BookingSuccess: { bookingId: string };
 };
 
 export type HomeStackParamList = {
@@ -31,31 +39,36 @@ export type HomeStackParamList = {
   Search: undefined;
   SalonList: Record<string, never>;
   SalonDetail: { id: string };
-  ServiceDetail: { service: any };
+  ServiceDetail: { service: Record<string, string> };
   ServiceSelection: { salonId: string };
   StaffSelection: { salonId: string };
   SlotSelection: { salonId: string; staffId?: string | null };
   BookingSummary: { salonId: string; staffId?: string | null; date: string; time: string };
-  Payment: { bookingData: any };
+  Payment: { bookingData: Record<string, string> };
   BookingSuccess: { bookingId: string };
   Reviews: undefined;
   Gallery: undefined;
   ImageViewer: { imageUri: string };
   Team: undefined;
-  ArtistProfile: { artist: any };
+  ArtistProfile: { artist: Record<string, string> };
   Location: undefined;
+  Offers: undefined;
+  SpecialForYou: undefined;
+  Wishlist: undefined;
 };
 
 export type BookingsStackParamList = {
+  MyBookings: undefined;
   BookingList: undefined;
   BookingDetail: { id: string };
   Reschedule: { bookingId: string };
   WriteReview: { bookingId: string };
+  EReceipt: { bookingId: string };
 };
 
 export type ShopStackParamList = {
-  ProductList: undefined;
-  ProductDetail: { product: any; id?: string };
+  ShopHome: undefined;
+  ProductDetail: { product: Record<string, string>; id?: string };
   Cart: undefined;
   Checkout: undefined;
   OrderConfirmed: { orderId: string };
@@ -66,25 +79,14 @@ export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Addresses: undefined;
-  AddAddress: {
-    address?: {
-      id: string;
-      line1: string;
-      line2?: string;
-      city: string;
-      state: string;
-      pincode: string;
-      type: 'home' | 'work' | 'other';
-      isDefault: boolean;
-    };
-  } | undefined;
+  AddAddress: { addressId?: string };
   Settings: undefined;
   Notifications: undefined;
   Help: undefined;
   Chatbot: undefined;
-  // Wallet screens nested inside ProfileStack
   WalletHome: undefined;
   AddMoney: undefined;
   TransactionHistory: undefined;
   Referral: undefined;
+  MyCoupon: undefined;
 };

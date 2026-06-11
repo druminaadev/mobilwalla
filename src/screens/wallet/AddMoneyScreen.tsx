@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { CreditCard, QrCode, Building2, Wallet } from 'lucide-react-native';
-import { Button } from '@/components/common/Button';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { DEMO_WALLET } from '@/data/demo';
-import { colors } from '@/constants/colors';
+import { Button } from '../../components/common/Button';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { DEMO_WALLET } from '../../data/demo';
+import { colors } from '../../constants/colors';
 
 const QUICK_AMOUNTS = [100, 200, 500, 1000, 2000, 5000];
 

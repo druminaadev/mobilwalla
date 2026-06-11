@@ -1,26 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Calendar, Clock } from 'lucide-react-native';
-import { Card } from '@/components/common/Card';
-import { BookingStatus } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { Card } from '../common/Card';
+import { BookingStatus } from '../../types/models';
+import { colors } from '../../constants/colors';
 
 const STATUS_COLOR: Record<string, string> = {
-  [BookingStatus.CONFIRMED]: colors.success,
-  [BookingStatus.PENDING_PAYMENT]: colors.warning,
-  [BookingStatus.COMPLETED]: colors.primary,
-  [BookingStatus.CANCELLED]: colors.error,
-  [BookingStatus.CHECKED_IN]: colors.info,
-  [BookingStatus.NO_SHOW]: colors.textSecondary,
+  'confirmed': colors.success,
+  'pending': colors.warning,
+  'completed': colors.primary,
+  'cancelled': colors.error,
+  'in_progress': colors.info,
+  'rescheduled': colors.textSecondary,
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  [BookingStatus.CONFIRMED]: 'Confirmed',
-  [BookingStatus.PENDING_PAYMENT]: 'Pending',
-  [BookingStatus.COMPLETED]: 'Completed',
-  [BookingStatus.CANCELLED]: 'Cancelled',
-  [BookingStatus.CHECKED_IN]: 'Checked In',
-  [BookingStatus.NO_SHOW]: 'No Show',
+  'confirmed': 'Confirmed',
+  'pending': 'Pending',
+  'completed': 'Completed',
+  'cancelled': 'Cancelled',
+  'in_progress': 'In Progress',
+  'rescheduled': 'Rescheduled',
 };
 
 interface Props {

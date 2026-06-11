@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Star } from 'lucide-react-native';
-import { designTokens } from '@/theme/tokens';
+import { designTokens } from '../../screens/home/theme/tokens';
 
 interface StatItemProps {
   value: string | number;

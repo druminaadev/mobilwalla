@@ -1,19 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Animated, Dimensions, Platform, StatusBar, Image,
+  Animated as RNAnimated, Dimensions, Platform, StatusBar, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
 import {
   ArrowLeft, Package, CheckCircle, Truck, MapPin,
   Clock, Phone, MessageCircle, Copy, RotateCcw, ChevronRight,
   Store, Home as HomeIcon,
 } from 'lucide-react-native';
-import { ShopStackParamList } from '@/types/navigation';
-import { colors } from '@/constants/colors';
+import { ShopStackParamList } from '../../types/navigation';
+import { colors } from '../../constants/colors';
 
 type NavigationProp = NativeStackNavigationProp<ShopStackParamList, 'OrderTracking'>;
 type RoutePropType = RouteProp<ShopStackParamList, 'OrderTracking'>;
@@ -59,44 +60,24 @@ const ORDER_ITEMS: OrderItem[] = [
 
 const STEPS: TrackStep[] = [
   {
-    id: 's1',
-    label: 'Order Placed',
-    subLabel: 'Your order has been confirmed',
-    time: 'Today, 10:32 AM',
-    icon: CheckCircle,
-    status: 'done',
+    id: 's1', label: 'Order Placed', subLabel: 'Your order has been confirmed',
+    time: 'Today, 10:32 AM', icon: CheckCircle, status: 'done',
   },
   {
-    id: 's2',
-    label: 'Packed',
-    subLabel: 'Packed & ready for pickup',
-    time: 'Today, 12:15 PM',
-    icon: Package,
-    status: 'done',
+    id: 's2', label: 'Packed', subLabel: 'Packed & ready for pickup',
+    time: 'Today, 12:15 PM', icon: Package, status: 'done',
   },
   {
-    id: 's3',
-    label: 'Shipped',
-    subLabel: 'Out for delivery — Rajesh (Driver)',
-    time: 'Today, 2:40 PM',
-    icon: Truck,
-    status: 'active',
+    id: 's3', label: 'Shipped', subLabel: 'Out for delivery — Rajesh (Driver)',
+    time: 'Today, 2:40 PM', icon: Truck, status: 'active',
   },
   {
-    id: 's4',
-    label: 'Out for Delivery',
-    subLabel: 'Arriving at your address soon',
-    time: 'Expected 5:00 PM',
-    icon: MapPin,
-    status: 'pending',
+    id: 's4', label: 'Out for Delivery', subLabel: 'Arriving at your address soon',
+    time: 'Expected 5:00 PM', icon: MapPin, status: 'pending',
   },
   {
-    id: 's5',
-    label: 'Delivered',
-    subLabel: 'Package handed over',
-    time: '',
-    icon: HomeIcon,
-    status: 'pending',
+    id: 's5', label: 'Delivered', subLabel: 'Package handed over',
+    time: '', icon: HomeIcon, status: 'pending',
   },
 ];
 
@@ -108,33 +89,17 @@ const STEP_COLORS: Record<StepStatus, { dot: string; line: string; icon: string;
 
 // ─── Animated Step ────────────────────────────────────────────────────────────
 
-function TrackStepRow({
-  step,
-  isLast,
-  delay,
-}: {
-  step: TrackStep;
-  isLast: boolean;
-  delay: number;
-}) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
+function TrackStepRow({ step, isLast, delay }: { step: TrackStep; isLast: boolean; delay: number }) {
+  const pulseAnim = useRef(new RNAnimated.Value(1)).current;
   const c = STEP_COLORS[step.status];
   const Icon = step.icon;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
-    ]).start();
-
     if (step.status === 'active') {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.25, duration: 700, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      const pulse = RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(pulseAnim, { toValue: 1.25, duration: 700, useNativeDriver: true }),
+          RNAnimated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
         ])
       );
       pulse.start();
@@ -143,17 +108,11 @@ function TrackStepRow({
   }, []);
 
   return (
-    <Animated.View style={[styles.stepRow, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View entering={FadeInUp.delay(delay).duration(400)} style={styles.stepRow}>
       {/* Timeline column */}
       <View style={styles.stepTimeline}>
-        {/* Pulse ring for active */}
         {step.status === 'active' && (
-          <Animated.View
-            style={[
-              styles.stepPulseRing,
-              { transform: [{ scale: pulseAnim }], borderColor: c.dot },
-            ]}
-          />
+          <RNAnimated.View style={[styles.stepPulseRing, { transform: [{ scale: pulseAnim }], borderColor: c.dot }]} />
         )}
         <View style={[styles.stepDot, { backgroundColor: c.bg }]}>
           <Icon size={14} color={c.icon} strokeWidth={2.5} />
@@ -164,11 +123,7 @@ function TrackStepRow({
       {/* Content */}
       <View style={styles.stepContent}>
         <View style={styles.stepLabelRow}>
-          <Text style={[
-            styles.stepLabel,
-            step.status === 'active' && styles.stepLabelActive,
-            step.status === 'pending' && styles.stepLabelPending,
-          ]}>
+          <Text style={[styles.stepLabel, step.status === 'active' && styles.stepLabelActive, step.status === 'pending' && styles.stepLabelPending]}>
             {step.label}
           </Text>
           {step.status === 'active' && (
@@ -178,17 +133,8 @@ function TrackStepRow({
             </View>
           )}
         </View>
-        <Text style={[
-          styles.stepSub,
-          step.status === 'pending' && styles.stepSubPending,
-        ]}>
-          {step.subLabel}
-        </Text>
-        {step.time !== '' && (
-          <Text style={[styles.stepTime, step.status === 'pending' && styles.stepTimePending]}>
-            {step.time}
-          </Text>
-        )}
+        <Text style={[styles.stepSub, step.status === 'pending' && styles.stepSubPending]}>{step.subLabel}</Text>
+        {step.time !== '' && <Text style={[styles.stepTime, step.status === 'pending' && styles.stepTimePending]}>{step.time}</Text>}
       </View>
     </Animated.View>
   );
@@ -222,7 +168,7 @@ export default function OrderTrackingScreen() {
       {/* ── Header ── */}
       <LinearGradient
         colors={['#FF5C8A', '#FF3366']}
-        style={[styles.headerGradient, { paddingTop: insets.top + 8 }]}
+        style={[styles.headerGradient, { paddingTop: Math.max(insets.top, 20) }]}
       >
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -240,7 +186,7 @@ export default function OrderTrackingScreen() {
         </View>
 
         {/* ETA card */}
-        <View style={styles.etaCard}>
+        <Animated.View entering={ZoomIn.duration(400)} style={styles.etaCard}>
           <View style={styles.etaLeft}>
             <Text style={styles.etaLabel}>Estimated Delivery</Text>
             <Text style={styles.etaTime}>Today by 5:00 PM</Text>
@@ -252,13 +198,13 @@ export default function OrderTrackingScreen() {
           <View style={styles.etaRight}>
             <Truck size={44} color="#FF5C8A" />
           </View>
-        </View>
+        </Animated.View>
       </LinearGradient>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 40) }}>
 
         {/* ── Map placeholder ── */}
-        <View style={styles.mapWrap}>
+        <Animated.View entering={FadeInUp.delay(100)} style={styles.mapWrap}>
           <Image
             source={{ uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80' }}
             style={styles.mapImage}
@@ -283,10 +229,10 @@ export default function OrderTrackingScreen() {
             <View style={styles.mapLiveDot} />
             <Text style={styles.mapLiveText}>Live Tracking</Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Delivery partner ── */}
-        <View style={styles.card}>
+        <Animated.View entering={FadeInUp.delay(200)} style={styles.card}>
           <View style={styles.driverRow}>
             <View style={styles.driverAvatar}>
               <Text style={styles.driverAvatarText}>R</Text>
@@ -300,44 +246,24 @@ export default function OrderTrackingScreen() {
                 <Phone size={18} color="#FF5C8A" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.driverActionBtn}>
-                <MessageCircle size={18} color="#3B82F6" />
+                <MessageCircle size={18} color="#FF5C8A" />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Timeline ── */}
-        <View style={styles.card}>
+        <Animated.View entering={FadeInUp.delay(300)} style={styles.card}>
           <Text style={styles.cardTitle}>Order Journey</Text>
           <View style={styles.timeline}>
             {STEPS.map((step, i) => (
-              <TrackStepRow
-                key={step.id}
-                step={step}
-                isLast={i === STEPS.length - 1}
-                delay={i * 120}
-              />
+              <TrackStepRow key={step.id} step={step} isLast={i === STEPS.length - 1} delay={300 + (i * 100)} />
             ))}
           </View>
-        </View>
-
-        {/* ── Delivery address ── */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Delivery Address</Text>
-          <View style={styles.addressRow}>
-            <View style={styles.addressIconWrap}>
-              <HomeIcon size={18} color="#FF5C8A" />
-            </View>
-            <View style={styles.addressInfo}>
-              <Text style={styles.addressLabel}>Home</Text>
-              <Text style={styles.addressText}>123 Main St, Navrangpura</Text>
-              <Text style={styles.addressText}>Ahmedabad, Gujarat — 380009</Text>
-            </View>
-          </View>
-        </View>
+        </Animated.View>
 
         {/* ── Order Items ── */}
-        <View style={styles.card}>
+        <Animated.View entering={FadeInUp.delay(400)} style={styles.card}>
           <Text style={styles.cardTitle}>Order Items ({ORDER_ITEMS.length})</Text>
           {ORDER_ITEMS.map((item, i) => (
             <View key={item.id} style={[styles.itemRow, i < ORDER_ITEMS.length - 1 && styles.itemRowBorder]}>
@@ -350,35 +276,14 @@ export default function OrderTrackingScreen() {
               <Text style={styles.itemPrice}>₹{item.price * item.qty}</Text>
             </View>
           ))}
-
-          {/* Bill summary */}
-          <View style={styles.billSection}>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Subtotal</Text>
-              <Text style={styles.billValue}>₹{subtotal}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Delivery</Text>
-              <Text style={styles.billValue}>₹{delivery}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Discount</Text>
-              <Text style={[styles.billValue, { color: '#10B981' }]}>-₹200</Text>
-            </View>
-            <View style={styles.billDivider} />
-            <View style={styles.billRow}>
-              <Text style={styles.billTotal}>Total Paid</Text>
-              <Text style={styles.billTotalValue}>₹{total - 200}</Text>
-            </View>
-          </View>
-        </View>
-
+        </Animated.View>
+        
         {/* ── Help Actions ── */}
-        <View style={styles.card}>
+        <Animated.View entering={FadeInUp.delay(500)} style={styles.card}>
           <Text style={styles.cardTitle}>Need Help?</Text>
           {[
             { icon: RotateCcw,       label: 'Request a Return',    sub: 'Raise a return request',         color: '#F59E0B' },
-            { icon: MessageCircle,   label: 'Chat with Support',   sub: 'Get help from our team',         color: '#3B82F6' },
+            { icon: MessageCircle,   label: 'Chat with Support',   sub: 'Get help from our team',         color: '#FF5C8A' },
             { icon: Phone,           label: 'Call Support',        sub: '+91 98765 43210',                color: '#10B981' },
           ].map((action) => {
             const Icon = action.icon;
@@ -395,7 +300,7 @@ export default function OrderTrackingScreen() {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </Animated.View>
 
       </ScrollView>
     </View>
@@ -410,10 +315,7 @@ const styles = StyleSheet.create({
   // Header gradient
   headerGradient: { paddingHorizontal: 16, paddingBottom: 0 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center',
-  },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
   headerOrderId: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
@@ -423,9 +325,10 @@ const styles = StyleSheet.create({
   // ETA card
   etaCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#fff', borderRadius: 22, padding: 20, marginBottom: -20,
+    backgroundColor: '#fff', borderRadius: 24, padding: 24, marginBottom: -24,
     marginHorizontal: 0,
     shadowColor: '#FF5C8A', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6,
+    zIndex: 10
   },
   etaLeft: {},
   etaLabel: { fontSize: 12, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
@@ -433,76 +336,41 @@ const styles = StyleSheet.create({
   etaStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   etaStatusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF5C8A' },
   etaStatusText: { fontSize: 13, fontWeight: '600', color: '#FF5C8A' },
-  etaRight: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#FFF0F5', justifyContent: 'center', alignItems: 'center',
-  },
+  etaRight: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#FFF0F5', justifyContent: 'center', alignItems: 'center' },
 
   // Map
-  mapWrap: { height: 200, position: 'relative', marginTop: 32, marginHorizontal: 16, borderRadius: 22, overflow: 'hidden' },
+  mapWrap: { height: 200, position: 'relative', marginTop: 40, marginHorizontal: 16, borderRadius: 24, overflow: 'hidden' },
   mapImage: { width: '100%', height: '100%' },
   mapOverlay: { position: 'absolute', inset: 0 } as any,
   driverPin: { position: 'absolute', top: '40%', left: '45%', alignItems: 'center' },
-  driverPinInner: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff',
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
-  },
-  driverPinTail: {
-    width: 0, height: 0,
-    borderLeftWidth: 7, borderRightWidth: 7, borderTopWidth: 10,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#fff',
-  },
+  driverPinInner: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  driverPinTail: { width: 0, height: 0, borderLeftWidth: 7, borderRightWidth: 7, borderTopWidth: 10, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#fff' },
   destPin: { position: 'absolute', top: '25%', right: '25%' },
-  destPinInner: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#FF5C8A',
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#FF5C8A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
-  },
-  mapLiveChip: {
-    position: 'absolute', bottom: 14, right: 14,
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-  },
+  destPinInner: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#FF5C8A', justifyContent: 'center', alignItems: 'center', shadowColor: '#FF5C8A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 4 },
+  mapLiveChip: { position: 'absolute', bottom: 14, right: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   mapLiveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981' },
   mapLiveText: { fontSize: 12, fontWeight: '700', color: '#fff' },
 
   // Card
-  card: {
-    backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16,
-    borderRadius: 22, padding: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 10, elevation: 2,
-  },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary, marginBottom: 16, letterSpacing: -0.3 },
+  card: { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 3 },
+  cardTitle: { fontSize: 17, fontWeight: '800', color: colors.textPrimary, marginBottom: 16, letterSpacing: -0.3 },
 
   // Driver
   driverRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  driverAvatar: {
-    width: 50, height: 50, borderRadius: 25,
-    backgroundColor: '#FF5C8A', justifyContent: 'center', alignItems: 'center',
-  },
+  driverAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#FF5C8A', justifyContent: 'center', alignItems: 'center' },
   driverAvatarText: { fontSize: 20, fontWeight: '800', color: '#fff' },
   driverInfo: { flex: 1 },
   driverName: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 3 },
   driverRole: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
   driverActions: { flexDirection: 'row', gap: 10 },
-  driverActionBtn: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center',
-  },
+  driverActionBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.gray100, justifyContent: 'center', alignItems: 'center' },
 
   // Timeline
   timeline: { paddingTop: 4 },
   stepRow: { flexDirection: 'row', gap: 16 },
   stepTimeline: { alignItems: 'center', width: 36, position: 'relative' },
-  stepPulseRing: {
-    position: 'absolute', top: -4, width: 44, height: 44, borderRadius: 22,
-    borderWidth: 2, opacity: 0.3,
-  },
-  stepDot: {
-    width: 36, height: 36, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center', zIndex: 1,
-  },
+  stepPulseRing: { position: 'absolute', top: -4, width: 44, height: 44, borderRadius: 22, borderWidth: 2, opacity: 0.3 },
+  stepDot: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
   stepLine: { width: 2, flex: 1, minHeight: 24, marginVertical: 4 },
   stepContent: { flex: 1, paddingBottom: 24 },
   stepLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
@@ -513,41 +381,19 @@ const styles = StyleSheet.create({
   stepSubPending: { color: colors.textTertiary },
   stepTime: { fontSize: 12, color: colors.textTertiary, fontWeight: '500' },
   stepTimePending: { color: colors.gray300 },
-  liveBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#FFF0F5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-  },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFF0F5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FF5C8A' },
   liveText: { fontSize: 10, fontWeight: '800', color: '#FF5C8A', letterSpacing: 0.5 },
 
-  // Address
-  addressRow: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-  addressIconWrap: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#FFF0F5', justifyContent: 'center', alignItems: 'center',
-  },
-  addressInfo: { flex: 1 },
-  addressLabel: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
-  addressText: { fontSize: 13, color: colors.textSecondary, lineHeight: 20 },
-
   // Items
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
-  itemRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray200 },
+  itemRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray100 },
   itemImage: { width: 64, height: 64, borderRadius: 12 },
   itemInfo: { flex: 1 },
   itemBrand: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
   itemName: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, lineHeight: 18, marginBottom: 3 },
   itemQty: { fontSize: 12, color: colors.textSecondary },
   itemPrice: { fontSize: 15, fontWeight: '800', color: '#FF5C8A' },
-
-  // Bill
-  billSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.gray200 },
-  billRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  billLabel: { fontSize: 14, color: colors.textSecondary },
-  billValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
-  billDivider: { height: 1, backgroundColor: colors.gray200, marginVertical: 10 },
-  billTotal: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
-  billTotalValue: { fontSize: 17, fontWeight: '800', color: '#FF5C8A' },
 
   // Help
   helpRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.gray100 },

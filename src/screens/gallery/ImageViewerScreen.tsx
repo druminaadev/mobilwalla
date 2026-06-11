@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Pressable, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '@/types/navigation';
+import { HomeStackParamList } from '../../types/navigation';
 import { X, Download, MoreVertical } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 12 },
   actionButton: { padding: 8 },
   image: { width, height: height * 0.7, marginTop: 80 },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(0,0,0,0.7)' },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(0, 0, 0, 0.5)' },
   caption: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 4 },
   artist: { fontSize: 14, color: '#E2E8F0', marginBottom: 8 },
   tags: { fontSize: 14, color: '#FF5C8A' },

@@ -1,8 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp } from 'react-native';
-import { colors } from '@/constants/colors';
-import { typography } from '@/constants/typography';
-import { spacing, borderRadius } from '@/constants/spacing';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp, View } from 'react-native';
+import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
+import { spacing, borderRadius } from '../../constants/spacing';
 
 interface ButtonProps {
   title: string;
@@ -13,6 +13,8 @@ interface ButtonProps {
   disabled?: boolean;
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
+  icon?: React.ReactNode;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -24,6 +26,8 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   fullWidth = false,
   style,
+  icon,
+  textStyle,
 }) => {
   const buttonStyles: StyleProp<ViewStyle> = [
     styles.button,
@@ -39,6 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
     styles[`${variant}Text`],
     styles[`${size}Text`],
     (disabled || loading) && styles.disabledText,
+    textStyle,
   ];
 
   return (
@@ -51,7 +56,10 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator color={variant === 'outline' ? colors.primary : colors.white} />
       ) : (
-        <Text style={textStyles}>{title}</Text>
+        <>
+          {icon && <View style={{ marginRight: spacing.sm }}>{icon}</View>}
+          <Text style={textStyles}>{title}</Text>
+        </>
       )}
     </TouchableOpacity>
   );
@@ -71,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   secondary: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.accent,
   },
   outline: {
     backgroundColor: 'transparent',

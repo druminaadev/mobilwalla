@@ -1,175 +1,238 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Dimensions, StatusBar } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ArrowLeft, Calendar, Clock, MapPin, Phone, User, Check } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft, Calendar, Clock, MapPin, Navigation, User, QrCode, Scissors } from 'lucide-react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+
 import { BookingsStackParamList } from '@/types/navigation';
 import { Button } from '@/components/common/Button';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { DEMO_BOOKINGS, DEMO_SALONS, DEMO_STAFF } from '@/data/demo';
-import { BookingStatus } from '@/types/models';
+import { DEMO_SALONS, DEMO_STAFF, DEMO_SERVICES } from '@/data/demo';
+import { Booking, BookingStatus } from '@/types/models';
 import { colors } from '@/constants/colors';
+import { typography } from '@/constants/typography';
 
 type Props = NativeStackScreenProps<BookingsStackParamList, 'BookingDetail'>;
 
+const { width } = Dimensions.get('window');
+
 const STATUS_COLOR: Record<string, string> = {
-  [BookingStatus.CONFIRMED]: colors.success,
-  [BookingStatus.PENDING_PAYMENT]: colors.warning,
-  [BookingStatus.COMPLETED]: colors.primary,
-  [BookingStatus.CANCELLED]: colors.error,
+  'confirmed': colors.primary,
+  'pending': colors.warning,
+  'completed': colors.success,
+  'cancelled': colors.error,
+  'rescheduled': colors.info,
 };
 
 export default function BookingDetailScreen({ navigation, route }: Props) {
   const { id } = route.params;
-  const booking = DEMO_BOOKINGS.find((b) => b.id === id) ?? DEMO_BOOKINGS[0];
-  const salon = DEMO_SALONS.find((s) => s.id === booking.salonId) ?? DEMO_SALONS[0];
-  const staff = booking.staffId ? DEMO_STAFF[booking.salonId]?.find((s) => s.id === booking.staffId) : null;
+  const insets = useSafeAreaInsets();
+  
+  // Try to mock a booking. In reality, we would fetch it from an API using the id.
+  const booking: Booking = {
+      id: id || 'BKG-84920X',
+      salonId: DEMO_SALONS[0].id,
+      salonName: DEMO_SALONS[0].name,
+      salonImage: DEMO_SALONS[0].coverImageUrl || 'https://images.unsplash.com/photo-1560066984-138dadb4c035',
+      services: [DEMO_SERVICES.s1[0], DEMO_SERVICES.s1[1]],
+      staff: DEMO_STAFF.s1[0],
+      date: new Date().toISOString(),
+      time: '14:00',
+      status: 'confirmed',
+      totalAmount: 2300,
+      paymentStatus: 'SUCCESS',
+      paymentMethod: 'upi',
+      createdAt: new Date().toISOString()
+  };
 
-  const isUpcoming = [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT].includes(booking.status);
+  const salon = DEMO_SALONS.find((s) => s.id === booking.salonId) ?? DEMO_SALONS[0];
+  const staff = booking.staff;
+
+  const isUpcoming = ['confirmed', 'pending', 'rescheduled'].includes(booking.status);
   const statusColor = STATUS_COLOR[booking.status] ?? colors.textSecondary;
 
-  const timeline = [
-    { label: 'Booking Placed', done: true },
-    { label: 'Confirmed', done: booking.status !== BookingStatus.PENDING_PAYMENT },
-    { label: 'In Progress', done: booking.status === BookingStatus.CHECKED_IN || booking.status === BookingStatus.COMPLETED },
-    { label: 'Completed', done: booking.status === BookingStatus.COMPLETED },
-  ];
-
   const handleCancel = () => {
-    Alert.alert('Cancel Booking', 'Are you sure?', [
-      { text: 'No', style: 'cancel' },
+    Alert.alert('Cancel Booking', 'Are you sure you want to cancel your appointment? This action cannot be undone.', [
+      { text: 'No, Keep it', style: 'cancel' },
       { text: 'Yes, Cancel', style: 'destructive', onPress: () => navigation.goBack() },
     ]);
   };
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Booking Details" onBack={() => navigation.goBack()} />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Hero Section */}
+        <Animated.View entering={FadeInDown.duration(600)} style={styles.heroContainer}>
+          <Image source={{ uri: booking.salonImage }} style={styles.heroImage} />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.heroOverlay}
+          />
+          
+          {/* Header Actions */}
+          <View style={[styles.headerActions, { top: insets.top + 10 }]}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <ArrowLeft size={24} color="#FFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Digital Pass</Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Status Banner */}
-        <View style={[styles.statusBanner, { backgroundColor: statusColor + '18' }]}>
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {booking.status.replace('_', ' ')}
-          </Text>
-          <Text style={styles.bookingId}>Booking ID: #{booking.id.toUpperCase()}</Text>
-        </View>
+          {/* Salon Info Overlay */}
+          <View style={styles.heroBottomContent}>
+            <Text style={styles.heroSalonName}>{booking.salonName}</Text>
+            <View style={styles.heroLocationRow}>
+              <MapPin size={14} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.heroLocationText}>{salon.addressLine1}, {salon.city}</Text>
+            </View>
+          </View>
+        </Animated.View>
 
-        {/* Timeline */}
-        {isUpcoming && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Status Timeline</Text>
-            {timeline.map((item, i) => (
-              <View key={i} style={styles.timelineRow}>
-                <View style={styles.timelineLeft}>
-                  <View style={[styles.dot, item.done && styles.dotDone]}>
-                    {item.done && <Check size={11} color="white" />}
-                  </View>
-                  {i < timeline.length - 1 && <View style={[styles.line, item.done && styles.lineDone]} />}
+        <View style={styles.contentWrapper}>
+          {/* Glassmorphic Pass Card */}
+          <Animated.View entering={FadeInUp.delay(200).springify()} style={styles.passCard}>
+            <View style={styles.passHeader}>
+              <View>
+                <Text style={styles.passLabel}>BOOKING ID</Text>
+                <Text style={styles.passId}>#{booking.id.toUpperCase()}</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
+                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                <Text style={[styles.statusText, { color: statusColor }]}>{booking.status.toUpperCase()}</Text>
+              </View>
+            </View>
+            
+            {/* QR Code Mock */}
+            <View style={styles.qrContainer}>
+              <QrCode size={80} color={colors.textPrimary} strokeWidth={1} />
+              <Text style={styles.scanText}>Show this at the reception</Text>
+            </View>
+            
+            {/* Dashed Separator */}
+            <View style={styles.passSeparatorContainer}>
+              <View style={styles.passCutoutLeft} />
+              <View style={styles.passDashedLine} />
+              <View style={styles.passCutoutRight} />
+            </View>
+
+            {/* Appointment Details Grid */}
+            <View style={styles.passDetailsGrid}>
+              <View style={styles.passDetailCol}>
+                <Text style={styles.passDetailLabel}>Date</Text>
+                <View style={styles.passDetailValRow}>
+                  <Calendar size={16} color={colors.primary} />
+                  <Text style={styles.passDetailValue}>
+                    {new Date(booking.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </Text>
                 </View>
-                <Text style={[styles.timelineLabel, item.done && styles.timelineLabelDone]}>{item.label}</Text>
               </View>
-            ))}
-          </View>
-        )}
-
-        {/* Salon Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Salon</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.salonName}>{salon.name}</Text>
-            <View style={styles.infoRow}>
-              <MapPin size={15} color={colors.textSecondary} />
-              <Text style={styles.infoText}>{salon.addressLine1}, {salon.city}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Phone size={15} color={colors.textSecondary} />
-              <Text style={styles.infoText}>{salon.phone}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Appointment */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appointment</Text>
-          <View style={styles.detailRow}>
-            <Calendar size={20} color={colors.primary} />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Date</Text>
-              <Text style={styles.detailValue}>
-                {new Date(booking.bookingDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.detailRow}>
-            <Clock size={20} color={colors.primary} />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Time</Text>
-              <Text style={styles.detailValue}>{booking.startTime} – {booking.endTime}</Text>
-            </View>
-          </View>
-          {staff && (
-            <View style={styles.detailRow}>
-              <User size={20} color={colors.primary} />
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Staff</Text>
-                <Text style={styles.detailValue}>{staff.name} · {staff.specialization}</Text>
+              <View style={styles.passDetailCol}>
+                <Text style={styles.passDetailLabel}>Time</Text>
+                <View style={styles.passDetailValRow}>
+                  <Clock size={16} color={colors.primary} />
+                  <Text style={styles.passDetailValue}>{booking.time}</Text>
+                </View>
+              </View>
+              <View style={[styles.passDetailCol, { borderRightWidth: 0 }]}>
+                <Text style={styles.passDetailLabel}>Stylist</Text>
+                <View style={styles.passDetailValRow}>
+                  <User size={16} color={colors.primary} />
+                  <Text style={styles.passDetailValue} numberOfLines={1}>{staff?.name ?? "Any"}</Text>
+                </View>
               </View>
             </View>
-          )}
-        </View>
+          </Animated.View>
 
-        {/* Services */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Services</Text>
-          {booking.serviceNames.map((name, i) => (
-            <View key={i} style={styles.serviceRow}>
-              <Text style={styles.serviceName}>{name}</Text>
+          {/* Invoice Section */}
+          <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.section}>
+            <Text style={styles.sectionTitle}>Invoice Details</Text>
+            <View style={styles.invoiceCard}>
+              <View style={styles.invoiceHeader}>
+                <Text style={styles.invoiceHeaderTitle}>Services</Text>
+                <Text style={styles.invoiceHeaderTitle}>Price</Text>
+              </View>
+              
+              {booking.services.map((svc, i) => (
+                <View key={i} style={styles.invoiceRow}>
+                  <View style={styles.invoiceItemLeft}>
+                    <Scissors size={14} color={colors.textSecondary} />
+                    <View>
+                      <Text style={styles.invoiceItemName}>{svc.name}</Text>
+                      <Text style={styles.invoiceItemDesc}>{svc.duration} mins</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.invoiceItemPrice}>₹{svc.discountedPrice || svc.price}</Text>
+                </View>
+              ))}
+
+              <View style={styles.invoiceDashedDivider} />
+
+              <View style={styles.invoiceSummaryRow}>
+                <Text style={styles.invoiceSummaryLabel}>Subtotal</Text>
+                <Text style={styles.invoiceSummaryValue}>₹{booking.services.reduce((acc, curr) => acc + (curr.discountedPrice || curr.price), 0)}</Text>
+              </View>
+              <View style={styles.invoiceSummaryRow}>
+                <Text style={styles.invoiceSummaryLabel}>Taxes & Fees</Text>
+                <Text style={styles.invoiceSummaryValue}>₹{Math.round(booking.services.reduce((acc, curr) => acc + (curr.discountedPrice || curr.price), 0) * 0.18)}</Text>
+              </View>
+
+              <View style={styles.invoiceSolidDivider} />
+
+              <View style={styles.invoiceTotalRow}>
+                <Text style={styles.invoiceTotalLabel}>Total Paid</Text>
+                <Text style={styles.invoiceTotalValue}>₹{booking.totalAmount}</Text>
+              </View>
+              <View style={styles.paymentMethodRow}>
+                <Text style={styles.paymentMethodText}>Paid via {booking.paymentMethod?.toUpperCase()}</Text>
+                <Text style={styles.paymentStatusText}>✓ SUCCESS</Text>
+              </View>
             </View>
-          ))}
-        </View>
+          </Animated.View>
 
-        {/* Payment */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Subtotal</Text>
-            <Text style={styles.priceValue}>₹{booking.totalAmount}</Text>
-          </View>
-          {booking.discountAmount > 0 && (
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Discount</Text>
-              <Text style={[styles.priceValue, { color: colors.success }]}>-₹{booking.discountAmount}</Text>
-            </View>
-          )}
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>GST (18%)</Text>
-            <Text style={styles.priceValue}>₹{Math.round(booking.totalAmount * 0.18)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.priceRow}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>₹{booking.finalAmount}</Text>
-          </View>
-          <View style={styles.paymentBadge}>
-            <Text style={styles.paymentText}>
-              {booking.paymentStatus === 'SUCCESS' ? '✅ Paid' : booking.paymentStatus === 'REFUNDED' ? '↩️ Refunded' : '⏳ Pending'}
-            </Text>
-          </View>
-        </View>
+          {/* Salon Location Actions */}
+          <Animated.View entering={FadeInUp.delay(400).springify()} style={styles.section}>
+             <Button 
+                title="Get Directions" 
+                variant="outline" 
+                icon={<Navigation size={18} color={colors.primary} />} 
+                style={styles.actionButtonOutline} 
+                onPress={() => {}}
+             />
+          </Animated.View>
 
-        <View style={{ height: 100 }} />
+          <View style={{ height: 100 }} />
+        </View>
       </ScrollView>
 
+      {/* Sticky Footer */}
       {isUpcoming && (
-        <View style={styles.footer}>
-          <Button title="Reschedule" onPress={() => navigation.navigate('Reschedule', { bookingId: id })} variant="outline" style={styles.btn} />
-          <Button title="Cancel" onPress={handleCancel} variant="outline" style={[styles.btn, styles.cancelBtn]} />
+        <View style={[styles.footer, { paddingBottom: insets.bottom || 20 }]}>
+          <Button 
+            title="Cancel" 
+            onPress={handleCancel} 
+            variant="outline" 
+            style={[styles.footerBtn, { borderColor: colors.error, backgroundColor: '#FFF0F0' }]}
+            textStyle={{ color: colors.error }}
+          />
+          <Button 
+            title="Reschedule" 
+            onPress={() => navigation.navigate('Reschedule', { bookingId: id })} 
+            style={styles.footerBtn} 
+          />
         </View>
       )}
 
-      {booking.status === BookingStatus.COMPLETED && (
-        <View style={styles.footer}>
-          <Button title="Write a Review" onPress={() => navigation.navigate('WriteReview', { bookingId: id })} fullWidth />
+      {booking.status === 'completed' && (
+        <View style={[styles.footer, { paddingBottom: insets.bottom || 20 }]}>
+          <Button 
+            title="Write a Review" 
+            onPress={() => navigation.navigate('WriteReview', { bookingId: id })} 
+            fullWidth 
+          />
         </View>
       )}
     </View>
@@ -177,39 +240,322 @@ export default function BookingDetailScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  statusBanner: { padding: 16, alignItems: 'center' },
-  statusText: { fontSize: 15, fontWeight: '700', textTransform: 'capitalize', marginBottom: 4 },
-  bookingId: { fontSize: 13, color: colors.textSecondary },
-  section: { padding: 16, borderBottomWidth: 8, borderBottomColor: colors.background },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
-  timelineRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
-  timelineLeft: { alignItems: 'center', marginRight: 12, width: 24 },
-  dot: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
-  dotDone: { backgroundColor: colors.success },
-  line: { width: 2, height: 24, backgroundColor: colors.border, marginVertical: 2 },
-  lineDone: { backgroundColor: colors.success },
-  timelineLabel: { fontSize: 14, color: colors.textSecondary, paddingTop: 2 },
-  timelineLabelDone: { color: colors.textPrimary, fontWeight: '600' },
-  infoCard: { padding: 14, backgroundColor: colors.background, borderRadius: 12 },
-  salonName: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  infoText: { fontSize: 14, color: colors.textSecondary, flex: 1 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
-  detailContent: { flex: 1 },
-  detailLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 2 },
-  detailValue: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-  serviceRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
-  serviceName: { fontSize: 15, fontWeight: '500', color: colors.textPrimary },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  priceLabel: { fontSize: 14, color: colors.textSecondary },
-  priceValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  totalValue: { fontSize: 18, fontWeight: '700', color: colors.primary },
-  paymentBadge: { marginTop: 10, padding: 10, backgroundColor: colors.background, borderRadius: 8 },
-  paymentText: { fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
-  footer: { flexDirection: 'row', padding: 16, gap: 12, borderTopWidth: 1, borderTopColor: colors.border },
-  btn: { flex: 1 },
-  cancelBtn: { borderColor: colors.error },
+  container: {
+    flex: 1,
+    backgroundColor: colors.gray50,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  heroContainer: {
+    height: 300,
+    width: '100%',
+    position: 'relative',
+  },
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    position: 'absolute',
+    width: '100%',
+    zIndex: 10,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  headerTitle: {
+    ...typography.h4,
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  heroBottomContent: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+  },
+  heroSalonName: {
+    ...typography.h3,
+    color: '#FFF',
+    marginBottom: 6,
+  },
+  heroLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroLocationText: {
+    ...typography.body2,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  contentWrapper: {
+    flex: 1,
+    marginTop: -20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+  },
+  passCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    paddingTop: 20,
+    marginTop: -60,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 8,
+    marginBottom: 24,
+  },
+  passHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  passLabel: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  passId: {
+    ...typography.h4,
+    color: colors.textPrimary,
+    letterSpacing: 2,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  qrContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 24,
+  },
+  scanText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 12,
+  },
+  passSeparatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 30,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  passCutoutLeft: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.gray50,
+    position: 'absolute',
+    left: -15,
+    zIndex: 2,
+  },
+  passCutoutRight: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.gray50,
+    position: 'absolute',
+    right: -15,
+    zIndex: 2,
+  },
+  passDashedLine: {
+    flex: 1,
+    height: 1,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderStyle: 'dashed',
+    marginHorizontal: 15,
+  },
+  passDetailsGrid: {
+    flexDirection: 'row',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    backgroundColor: '#FAFAFA',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  passDetailCol: {
+    flex: 1,
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: colors.gray200,
+    paddingHorizontal: 5,
+  },
+  passDetailLabel: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginBottom: 8,
+  },
+  passDetailValRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  passDetailValue: {
+    ...typography.subtitle2,
+    color: colors.textPrimary,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    ...typography.h4,
+    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+  invoiceCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  invoiceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  invoiceHeaderTitle: {
+    ...typography.subtitle2,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  invoiceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  invoiceItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  invoiceItemName: {
+    ...typography.subtitle1,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  invoiceItemDesc: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  invoiceItemPrice: {
+    ...typography.subtitle1,
+    color: colors.textPrimary,
+  },
+  invoiceDashedDivider: {
+    height: 1,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderStyle: 'dashed',
+    marginVertical: 16,
+  },
+  invoiceSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  invoiceSummaryLabel: {
+    ...typography.body2,
+    color: colors.textSecondary,
+  },
+  invoiceSummaryValue: {
+    ...typography.subtitle2,
+    color: colors.textPrimary,
+  },
+  invoiceSolidDivider: {
+    height: 1,
+    backgroundColor: colors.gray200,
+    marginVertical: 16,
+  },
+  invoiceTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 8,
+  },
+  invoiceTotalLabel: {
+    ...typography.h4,
+    color: colors.textPrimary,
+  },
+  invoiceTotalValue: {
+    ...typography.h2,
+    color: colors.primary,
+  },
+  paymentMethodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  paymentMethodText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
+  paymentStatusText: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '700',
+  },
+  actionButtonOutline: {
+    backgroundColor: '#FFF',
+    borderColor: colors.primary,
+    borderWidth: 1,
+  },
+  footer: {
+    flexDirection: 'row',
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray200,
+    backgroundColor: '#FFF',
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+  },
+  footerBtn: {
+    flex: 1,
+  },
 });

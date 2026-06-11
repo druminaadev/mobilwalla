@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Search, ArrowLeft, Star, MapPin } from 'lucide-react-native';
-import { HomeStackParamList } from '@/types/navigation';
-import { Card } from '@/components/common/Card';
-import { DEMO_SALONS } from '@/data/demo';
-import { Salon } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { HomeStackParamList } from '../../types/navigation';
+import { Card } from '../../components/common/Card';
+import { DEMO_SALONS } from '../../data/demo';
+import { Salon } from '../../types/models';
+import { colors } from '../../constants/colors';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Search'>;
 

@@ -1,0 +1,630 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, Image, TouchableOpacity,
+  Dimensions, RefreshControl, ScrollView, Platform
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  FadeInUp, SlideInDown, ZoomIn, FadeOut,
+  useSharedValue, useAnimatedStyle, useAnimatedRef,
+  useScrollViewOffset, withTiming, withSpring,
+  withSequence, withDelay, withRepeat, interpolate,
+  Extrapolation, scrollTo, useAnimatedReaction, runOnJS
+} from 'react-native-reanimated';
+import {
+  MapPin, ChevronDown, Bell, Search, Heart, Star,
+  Scissors, Droplet, Sparkles, Crown, Activity,
+  ArrowUp, CheckCircle2
+} from 'lucide-react-native';
+import { HomeStackParamList } from '../../types/navigation';
+import { colors } from '../../constants/colors';
+import { useAuthStore } from '../../store/authStore';
+import { useBookingStore } from '../../store/bookingStore';
+import { useWishlistStore } from '../../store/wishlistStore';
+
+const { width } = Dimensions.get('window');
+type NavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
+
+// ═══════════════════════════════════════════
+// MOCK DATA
+// ═══════════════════════════════════════════
+const SALONS = [
+  {
+    id: 's1', name: 'Luxe Beauty Lounge', address: 'Bandra West, Mumbai', rating: 4.8, reviewCount: 342,
+    distance: '1.2 km', priceRange: '₹₹₹', categories: ['Hair', 'Makeup'], isOpen: true, closingTime: '21:00',
+    image: require('../../../assets/images/salon.webp'), isFeatured: true, discount: '10% OFF', tags: ['Top Rated']
+  },
+  {
+    id: 's2', name: 'Glamour Studio', address: 'Andheri East, Mumbai', rating: 4.5, reviewCount: 128,
+    distance: '2.5 km', priceRange: '₹₹', categories: ['Nails', 'Spa'], isOpen: true, closingTime: '20:00',
+    image: require('../../../assets/images/salon-interior.webp'), isFeatured: false, tags: ['New']
+  },
+  {
+    id: 's3', name: 'Elegance Salon', address: 'Juhu, Mumbai', rating: 4.9, reviewCount: 512,
+    distance: '3.1 km', priceRange: '₹₹₹₹', categories: ['Bridal', 'Hair'], isOpen: false, closingTime: '22:00',
+    image: require('../../../assets/images/nail-art2.webp'), isFeatured: true, tags: ['Trending']
+  },
+];
+
+const SERVICES = [
+  { id: 'srv1', name: 'Hair Cut', icon: Scissors, bg: '#FFE4E6', color: '#FF5C8A' },
+  { id: 'srv2', name: 'Hair Color', icon: Droplet, bg: '#FEF3C7', color: '#F59E0B' },
+  { id: 'srv3', name: 'Facial', icon: Sparkles, bg: '#EDE9FE', color: '#8B5CF6' },
+  { id: 'srv4', name: 'Nail Art', icon: Star, bg: '#FCE7F3', color: '#FF5C8A' },
+  { id: 'srv5', name: 'Spa', icon: Heart, bg: '#D1FAE5', color: '#10B981' },
+  { id: 'srv6', name: 'Bridal', icon: Crown, bg: '#FEF9C3', color: '#C9A84C' },
+  { id: 'srv7', name: 'Massage', icon: Activity, bg: '#DBEAFE', color: '#3B82F6' },
+  { id: 'srv8', name: 'Makeup', icon: Sparkles, bg: '#FFE4E6', color: '#E11D48' },
+];
+
+const OFFERS = [
+  { id: 'o1', title: 'Summer Glow Up', discount: '40% OFF', code: 'SUMMER40', validUntil: 1, color: '#FF5C8A', image: require('../../../assets/images/hair-color.webp'), category: 'Hair' },
+  { id: 'o2', title: 'Bridal Package', discount: '20% OFF', code: 'BRIDE20', validUntil: 5, color: '#C9A84C', image: require('../../../assets/images/bridal.webp'), category: 'Bridal' },
+  { id: 'o3', title: 'Weekend Spa', discount: 'Flat ₹500', code: 'RELAX', validUntil: 2, color: '#10B981', image: require('../../../assets/images/woman-washing-head.webp'), category: 'Spa' },
+  { id: 'o4', title: 'Nail Art Combo', discount: 'Buy 1 Get 1', code: 'NAILS', validUntil: 10, color: '#8B5CF6', image: require('../../../assets/images/nail-art.webp'), category: 'Nails' },
+];
+
+const STYLISTS = [
+  { id: 'st1', name: 'Sarah Khan', specialty: 'Senior Hair Stylist', rating: 4.9, experience: '8 yrs', isAvailable: true },
+  { id: 'st2', name: 'Priya Sharma', specialty: 'Makeup Artist', rating: 4.8, experience: '5 yrs', isAvailable: false },
+  { id: 'st3', name: 'Rahul Dev', specialty: 'Color Specialist', rating: 4.7, experience: '6 yrs', isAvailable: true },
+  { id: 'st4', name: 'Anita Roy', specialty: 'Nail Technician', rating: 4.9, experience: '4 yrs', isAvailable: true },
+];
+
+const BANNERS = [
+  { id: 'b1', title: 'Luxury Hair\nTreatments', sub: 'Experience premium care', tag: 'TRENDING', discount: '30% OFF', image: require('../../../assets/images/female-hair.webp') },
+  { id: 'b2', title: 'Ultimate Spa\nRelaxation', sub: 'Rejuvenate your senses', tag: 'NEW', discount: '₹500 OFF', image: require('../../../assets/images/woman-washing-head.webp') },
+  { id: 'b3', title: 'Bridal Makeup\nMasterclass', sub: 'Book your trial today', tag: 'EXCLUSIVE', discount: '20% OFF', image: require('../../../assets/images/bridal.webp') },
+];
+
+const TRENDING_SERVICES = [
+  { id: 't1', name: 'Balayage Hair Color', price: '₹3,999', image: require('../../../assets/images/hair-color.webp') },
+  { id: 't2', name: 'Keratin Treatment', price: '₹4,499', image: require('../../../assets/images/femail-haircut.webp') },
+  { id: 't3', name: 'Gel Nail Extensions', price: '₹1,499', image: require('../../../assets/images/nail-art.webp') },
+  { id: 't4', name: 'Deep Cleansing Facial', price: '₹1,999', image: require('../../../assets/images/woman-washing-head.webp') },
+];
+
+// ═══════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════
+
+// 1. Skeleton Loader
+const SkeletonLoader = () => {
+  const sv = useSharedValue(0.3);
+  
+  useEffect(() => {
+    sv.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 800 }),
+        withTiming(0.3, { duration: 800 })
+      ),
+      -1,
+      true
+    );
+  }, [sv]);
+  
+  const style = useAnimatedStyle(() => ({ opacity: sv.value }));
+
+  return (
+    <Animated.View exiting={FadeOut.duration(400)} style={{ flex: 1, width: '100%' }}>
+      <Animated.View style={[styles.skeletonContainer, style]}>
+        <View style={styles.skeletonBanner} />
+        <View style={styles.skeletonRow}>
+          {[1, 2, 3, 4].map(i => <View key={i} style={styles.skeletonCircle} />)}
+        </View>
+        <View style={styles.skeletonCard} />
+        <View style={styles.skeletonCard} />
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
+// 2. Wishlist Heart
+const WishlistHeart = ({ salonId }: { salonId: string }) => {
+  const { isSalonLiked, toggleSalon } = useWishlistStore();
+  const isWishlisted = isSalonLiked(salonId);
+  const scale = useSharedValue(1);
+
+  const handlePress = useCallback(() => {
+    scale.value = withSequence(withSpring(1.4), withSpring(1));
+    toggleSalon({ id: salonId, name: 'Salon', address: '', image: '', rating: 5, reviewCount: 0 } as any);
+  }, [salonId, toggleSalon, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <TouchableOpacity style={styles.wishlistBtn} onPress={handlePress} activeOpacity={0.8}>
+      <Animated.View style={animatedStyle}>
+        <Heart size={20} color={isWishlisted ? colors.error : colors.white} fill={isWishlisted ? colors.error : 'rgba(0,0,0,0.3)'} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+// 3. Pagination Dot
+const PaginationDot = ({ index, bannerIndex }: { index: number, bannerIndex: any }) => {
+  const dotStyle = useAnimatedStyle(() => {
+    const isActive = Math.round(bannerIndex.value) === index;
+    return {
+      width: withTiming(isActive ? 20 : 6, { duration: 300 }),
+      backgroundColor: withTiming(isActive ? colors.primary : colors.gray300, { duration: 300 })
+    };
+  });
+  return <Animated.View style={[styles.dot, dotStyle]} />;
+};
+
+// ═══════════════════════════════════════════
+// MAIN SCREEN
+// ═══════════════════════════════════════════
+export default function HomeScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
+  
+  // Stores
+  const { user } = useAuthStore();
+  const { recentBookings } = useBookingStore();
+
+  // State
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
+  // Reanimated
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollViewOffset(scrollRef);
+  const bannerIndex = useSharedValue(0);
+  const searchScale = useSharedValue(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1500);
+  }, []);
+
+  // Greeting Logic
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning ☀️";
+    if (hour >= 12 && hour < 17) return "Good Afternoon 🌤️";
+    if (hour >= 17 && hour < 21) return "Good Evening 🌅";
+    return "Good Night 🌙";
+  };
+
+  // Scroll to Top FAB style
+  const fabStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollOffset.value, [200, 300], [0, 1], Extrapolation.CLAMP);
+    const scale = opacity > 0.1 ? 1 : 0;
+    return {
+      opacity,
+      transform: [{ scale }]
+    };
+  });
+
+  const handleScrollToTop = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const handleSearchPress = () => {
+    searchScale.value = withSequence(withSpring(0.98), withSpring(1));
+    setTimeout(() => navigation.navigate('Search'), 100);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.root, { paddingTop: insets.top }]}>
+        <SkeletonLoader />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.root}>
+      {/* 1. FIXED HEADER */}
+      <Animated.View entering={SlideInDown.duration(600)} style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+        <View style={styles.headerLeft}>
+          <MapPin size={18} color={colors.primary} />
+          <Text style={styles.locationText}>Mumbai, Maharashtra</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Location')}>
+            <ChevronDown size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconBtn}>
+            <Bell size={22} color={colors.textPrimary} />
+            <View style={styles.badgeDot} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatarWrap} onPress={() => navigation.navigate('ProfileTab' as any)}>
+            <LinearGradient colors={['#FF5C8A', '#FF9A9E']} style={styles.avatarBg}>
+              <Text style={styles.avatarInitials}>{user?.name?.charAt(0) || 'U'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+
+      <Animated.ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        stickyHeaderIndices={[1]}
+      >
+        {/* GREETING */}
+        <Animated.View entering={FadeInUp.delay(100)} style={styles.greetingWrap}>
+          <Text style={styles.greetingTitle}>{getGreeting()}</Text>
+          <Text style={styles.greetingSub}>{user?.name ? `${user.name}, ready` : 'Ready'} for your next salon visit?</Text>
+        </Animated.View>
+
+        {/* 2. STICKY SEARCH BAR */}
+        <View style={styles.searchStickyContainer}>
+          <Animated.View style={[styles.searchRow, { transform: [{ scale: searchScale }] }]}>
+            <TouchableOpacity style={styles.searchBar} activeOpacity={0.9} onPress={handleSearchPress}>
+              <Search size={20} color={colors.primary} />
+              <Text style={styles.searchPlaceholder}>Search salons, services...</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterBtn}>
+              <Text style={styles.filterIcon}>⌘</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        {/* 3. HERO BANNER CAROUSEL */}
+        <Animated.View entering={FadeInUp.delay(200)} style={styles.heroSection}>
+          <ScrollView
+            horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+            onScroll={(e) => {
+              bannerIndex.value = e.nativeEvent.contentOffset.x / (width - 32);
+            }}
+            scrollEventThrottle={16}
+          >
+            {BANNERS.map((banner, i) => (
+              <View key={banner.id} style={styles.bannerContainer}>
+                <Image source={banner.image} style={styles.bannerImg} />
+                <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']} style={styles.bannerOverlay}>
+                  <View style={styles.bannerContent}>
+                    <View style={styles.bannerTag}><Text style={styles.bannerTagText}>{banner.tag}</Text></View>
+                    <Text style={styles.bannerTitle}>{banner.title}</Text>
+                    <Text style={styles.bannerSub}>{banner.sub}</Text>
+                    <TouchableOpacity style={styles.bookNowBtn}>
+                      <Text style={styles.bookNowText}>Book Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.discountBadge}>
+                    <LinearGradient colors={['#FF5C8A', '#FF3366']} style={styles.discountBadgeBg}>
+                      <Text style={styles.discountBadgeText}>{banner.discount}</Text>
+                    </LinearGradient>
+                  </View>
+                </LinearGradient>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.dotsRow}>
+            {BANNERS.map((_, i) => (
+              <PaginationDot key={i} index={i} bannerIndex={bannerIndex} />
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* 4. SERVICE CATEGORIES */}
+        <Animated.View entering={FadeInUp.delay(300)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Our Services</Text>
+            <TouchableOpacity><Text style={styles.seeAllText}>See All</Text></TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.serviceScroll}>
+            {SERVICES.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <Animated.View key={s.id} entering={ZoomIn.delay(300 + (i * 60)).springify()}>
+                  <TouchableOpacity style={styles.serviceItem} onPress={() => navigation.navigate('SalonList', {})}>
+                    <View style={[styles.serviceCircle, { backgroundColor: s.bg }]}>
+                      <Icon size={28} color={s.color} />
+                    </View>
+                    <Text style={styles.serviceName}>{s.name}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </ScrollView>
+        </Animated.View>
+
+        {/* 5. FEATURED SALONS */}
+        <Animated.View entering={FadeInUp.delay(400)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Salons</Text>
+            <TouchableOpacity><Text style={styles.seeAllText}>View All →</Text></TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={width - 64} decelerationRate="fast" contentContainerStyle={styles.featuredScroll}>
+            {SALONS.filter(s => s.isFeatured).map((salon) => (
+              <TouchableOpacity key={salon.id} style={styles.featuredCard} onPress={() => navigation.navigate('SalonDetail', { id: salon.id })} activeOpacity={0.9}>
+                <Image source={salon.image} style={styles.featuredImg} />
+                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)']} style={styles.featuredOverlay} />
+                
+                <View style={styles.featuredTopRow}>
+                  <View style={styles.featuredTag}><Text style={styles.featuredTagText}>{salon.tags[0]}</Text></View>
+                  <WishlistHeart salonId={salon.id} />
+                </View>
+
+                <View style={styles.featuredBottom}>
+                  <Text style={styles.featuredName}>{salon.name}</Text>
+                  <View style={styles.featuredInfoRow}>
+                    <Star size={14} color={colors.accent} fill={colors.accent} />
+                    <Text style={styles.featuredRating}>{salon.rating} ({salon.reviewCount})</Text>
+                    <Text style={styles.featuredDot}>•</Text>
+                    <Text style={styles.featuredText}>{salon.distance}</Text>
+                    <Text style={styles.featuredDot}>•</Text>
+                    <Text style={styles.featuredText}>{salon.priceRange}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* 6. SPECIAL OFFERS STRIP */}
+        <Animated.View entering={FadeInUp.delay(500)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Hot Deals 🔥</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Offers')}><Text style={styles.seeAllText}>See All</Text></TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersScroll}>
+            {OFFERS.map((offer) => (
+              <TouchableOpacity key={offer.id} style={styles.offerCard} onPress={() => navigation.navigate('SpecialForYou')} activeOpacity={0.9}>
+                <Image source={offer.image} style={styles.offerImg} />
+                <View style={styles.offerInfo}>
+                  <Text style={[styles.offerDiscount, { color: offer.color }]}>{offer.discount}</Text>
+                  <Text style={styles.offerTitle} numberOfLines={1}>{offer.title}</Text>
+                  <View style={styles.offerCodeWrap}>
+                    <Text style={styles.offerCode}>{offer.code}</Text>
+                  </View>
+                  <Text style={[styles.offerValid, offer.validUntil < 3 && { color: colors.error }]}>
+                    Valid: {offer.validUntil} days left
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* 11. WHY CHOOSE US STRIP */}
+        <Animated.View entering={FadeInUp.delay(600)} style={styles.whyUsWrap}>
+          <LinearGradient colors={['#FFF0F5', '#FFE4EE']} style={styles.whyUsGradient}>
+            <View style={styles.whyUsItem}><CheckCircle2 size={20} color={colors.primary} /><Text style={styles.whyUsText}>Verified Salons</Text></View>
+            <View style={styles.whyUsItem}><CheckCircle2 size={20} color={colors.primary} /><Text style={styles.whyUsText}>Best Prices</Text></View>
+            <View style={styles.whyUsItem}><CheckCircle2 size={20} color={colors.primary} /><Text style={styles.whyUsText}>Easy Booking</Text></View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* 7. NEARBY SALONS */}
+        <Animated.View entering={FadeInUp.delay(700)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Near You 📍</Text>
+            <TouchableOpacity><Text style={styles.seeAllText}>View All</Text></TouchableOpacity>
+          </View>
+          <View style={styles.nearbyWrap}>
+            {SALONS.slice(0, 3).map((salon) => (
+              <TouchableOpacity key={salon.id} style={styles.nearbyCard} onPress={() => navigation.navigate('SalonDetail', { id: salon.id })} activeOpacity={0.8}>
+                <Image source={salon.image} style={styles.nearbyImg} />
+                <View style={styles.nearbyInfo}>
+                  <View style={styles.nearbyHeader}>
+                    <Text style={styles.nearbyName}>{salon.name}</Text>
+                    <WishlistHeart salonId={salon.id} />
+                  </View>
+                  <Text style={styles.nearbyAddress} numberOfLines={1}>{salon.address}</Text>
+                  <View style={styles.nearbyMeta}>
+                    <View style={styles.nearbyRating}><Star size={12} color={colors.accent} fill={colors.accent} /><Text style={styles.nearbyRatingText}>{salon.rating}</Text></View>
+                    <View style={styles.nearbyChip}><Text style={styles.nearbyChipText}>{salon.distance}</Text></View>
+                    <View style={[styles.nearbyChip, !salon.isOpen && { backgroundColor: colors.error + '20' }]}>
+                      <Text style={[styles.nearbyChipText, !salon.isOpen && { color: colors.error }]}>{salon.isOpen ? 'Open' : 'Closed'}</Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* 8. FEATURED STYLISTS */}
+        <Animated.View entering={FadeInUp.delay(800)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Top Stylists</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Team')}><Text style={styles.seeAllText}>Meet All →</Text></TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stylistScroll}>
+            {STYLISTS.map((st) => (
+              <TouchableOpacity key={st.id} style={styles.stylistCard} onPress={() => navigation.navigate('Team')} activeOpacity={0.8}>
+                <View style={styles.stylistAvatarWrap}>
+                  <LinearGradient colors={['#F3F4F6', '#E5E7EB']} style={styles.stylistAvatar}>
+                    <Text style={styles.stylistInitials}>{st.name.charAt(0)}</Text>
+                  </LinearGradient>
+                  {st.isAvailable && <View style={styles.onlineDot} />}
+                </View>
+                <Text style={styles.stylistName} numberOfLines={1}>{st.name}</Text>
+                <Text style={styles.stylistSpec}>{st.specialty}</Text>
+                <View style={styles.stylistRating}><Star size={10} color={colors.accent} fill={colors.accent} /><Text style={styles.stylistRatingText}>{st.rating}</Text></View>
+                <View style={styles.stylistBookBtn}><Text style={styles.stylistBookText}>Book</Text></View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* 9. TRENDING SERVICES GRID */}
+        <Animated.View entering={FadeInUp.delay(900)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Trending Now ✨</Text>
+          </View>
+          <View style={styles.gridWrap}>
+            {TRENDING_SERVICES.map((ts) => (
+              <TouchableOpacity key={ts.id} style={styles.gridCard} onPress={() => navigation.navigate('ServiceSelection', { salonId: 's1' })} activeOpacity={0.9}>
+                <Image source={ts.image} style={styles.gridImg} />
+                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.gridOverlay}>
+                  <Text style={styles.gridName} numberOfLines={1}>{ts.name}</Text>
+                  <Text style={styles.gridPrice}>Starts at {ts.price}</Text>
+                  <View style={styles.gridBookPill}><Text style={styles.gridBookPillText}>Book</Text></View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+
+      </Animated.ScrollView>
+
+      {/* FAB */}
+      <Animated.View style={[styles.fabWrap, fabStyle]}>
+        <TouchableOpacity style={styles.fab} onPress={handleScrollToTop}>
+          <ArrowUp size={24} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
+
+    </View>
+  );
+}
+
+// ═══════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+
+  // Header
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  locationText: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  badgeDot: { position: 'absolute', top: 10, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error, borderWidth: 1, borderColor: colors.white },
+  avatarWrap: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden' },
+  avatarBg: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  avatarInitials: { color: colors.white, fontWeight: '700', fontSize: 16 },
+
+  // Greeting
+  greetingWrap: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16 },
+  greetingTitle: { fontSize: 24, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.5 },
+  greetingSub: { fontSize: 15, color: colors.textSecondary, marginTop: 4 },
+
+  // Search
+  searchStickyContainer: { backgroundColor: colors.background, paddingBottom: 12, zIndex: 10 },
+  searchRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12 },
+  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, height: 50, borderRadius: 25, paddingHorizontal: 16, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  searchPlaceholder: { flex: 1, fontSize: 15, color: colors.textTertiary, fontWeight: '500' },
+  filterBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  filterIcon: { color: colors.white, fontSize: 20, fontWeight: '800' },
+
+  // Hero
+  heroSection: { marginBottom: 24 },
+  bannerContainer: { width: width - 32, height: 190, marginHorizontal: 16, borderRadius: 20, overflow: 'hidden' },
+  bannerImg: { width: '100%', height: '100%', resizeMode: 'cover' },
+  bannerOverlay: { position: 'absolute', inset: 0, padding: 20, flexDirection: 'row' } as any,
+  bannerContent: { flex: 1, justifyContent: 'center' },
+  bannerTag: { alignSelf: 'flex-start', backgroundColor: colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginBottom: 12 },
+  bannerTagText: { fontSize: 10, fontWeight: '800', color: colors.primary, letterSpacing: 0.5 },
+  bannerTitle: { fontSize: 22, fontWeight: '800', color: colors.white, lineHeight: 28, marginBottom: 4 },
+  bannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 16 },
+  bookNowBtn: { alignSelf: 'flex-start', backgroundColor: colors.white, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  bookNowText: { fontSize: 13, fontWeight: '700', color: colors.primary },
+  discountBadge: { justifyContent: 'center', alignItems: 'center', width: 64 },
+  discountBadgeBg: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  discountBadgeText: { color: colors.white, fontWeight: '800', fontSize: 16, textAlign: 'center' },
+  dotsRow: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 12 },
+  dot: { height: 6, borderRadius: 3 },
+
+  // Sections Common
+  section: { marginBottom: 32 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 16 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
+  seeAllText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+
+  // Categories
+  serviceScroll: { paddingHorizontal: 16, gap: 16 },
+  serviceItem: { alignItems: 'center', width: 64 },
+  serviceCircle: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+  serviceName: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
+
+  // Featured Salons
+  featuredScroll: { paddingHorizontal: 16, gap: 16 },
+  featuredCard: { width: width - 80, height: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.gray100, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  featuredImg: { width: '100%', height: '100%' },
+  featuredOverlay: { position: 'absolute', inset: 0, top: '40%' } as any,
+  featuredTopRow: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },
+  featuredTag: { backgroundColor: colors.white, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  featuredTagText: { fontSize: 11, fontWeight: '700', color: colors.textPrimary },
+  wishlistBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(5px)' } as any,
+  featuredBottom: { position: 'absolute', bottom: 16, left: 16, right: 16 },
+  featuredName: { fontSize: 18, fontWeight: '800', color: colors.white, marginBottom: 6 },
+  featuredInfoRow: { flexDirection: 'row', alignItems: 'center' },
+  featuredRating: { fontSize: 13, fontWeight: '600', color: colors.white, marginLeft: 4 },
+  featuredDot: { color: colors.textTertiary, marginHorizontal: 6 },
+  featuredText: { fontSize: 13, color: colors.white },
+
+  // Offers
+  offersScroll: { paddingHorizontal: 16, gap: 16 },
+  offerCard: { width: 260, height: 100, flexDirection: 'row', backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  offerImg: { width: 100, height: 100 },
+  offerInfo: { flex: 1, padding: 12, justifyContent: 'center' },
+  offerDiscount: { fontSize: 24, fontWeight: '800', marginBottom: 2 },
+  offerTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 6 },
+  offerCodeWrap: { alignSelf: 'flex-start', backgroundColor: colors.gray100, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 4 },
+  offerCode: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11, color: colors.textSecondary, fontWeight: '700' },
+  offerValid: { fontSize: 11, color: colors.textTertiary },
+
+  // Why Us
+  whyUsWrap: { marginHorizontal: 16, marginBottom: 32, borderRadius: 16, overflow: 'hidden' },
+  whyUsGradient: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 20 },
+  whyUsItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  whyUsText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
+
+  // Nearby
+  nearbyWrap: { paddingHorizontal: 16, gap: 12 },
+  nearbyCard: { flexDirection: 'row', backgroundColor: colors.white, height: 90, borderRadius: 16, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  nearbyImg: { width: 74, height: 74, borderRadius: 12 },
+  nearbyInfo: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  nearbyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  nearbyName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+  nearbyAddress: { fontSize: 12, color: colors.textSecondary, marginBottom: 6 },
+  nearbyMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  nearbyRating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  nearbyRatingText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
+  nearbyChip: { backgroundColor: colors.gray100, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  nearbyChipText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary },
+
+  // Stylists
+  stylistScroll: { paddingHorizontal: 16, gap: 16 },
+  stylistCard: { width: 120, alignItems: 'center', backgroundColor: colors.white, padding: 16, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  stylistAvatarWrap: { position: 'relative', marginBottom: 12 },
+  stylistAvatar: { width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center' },
+  stylistInitials: { fontSize: 24, fontWeight: '700', color: colors.textTertiary },
+  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.success, borderWidth: 2, borderColor: colors.white },
+  stylistName: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 },
+  stylistSpec: { fontSize: 11, color: colors.primary, fontWeight: '600', marginBottom: 6 },
+  stylistRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
+  stylistRatingText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  stylistBookBtn: { width: '100%', paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, alignItems: 'center' },
+  stylistBookText: { fontSize: 12, fontWeight: '700', color: colors.primary },
+
+  // Trending Grid
+  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 16 },
+  gridCard: { width: (width - 48) / 2, height: 150, borderRadius: 16, overflow: 'hidden' },
+  gridImg: { width: '100%', height: '100%' },
+  gridOverlay: { position: 'absolute', inset: 0, justifyContent: 'flex-end', padding: 12 } as any,
+  gridName: { fontSize: 13, fontWeight: '700', color: colors.white, marginBottom: 2 },
+  gridPrice: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 8 },
+  gridBookPill: { alignSelf: 'flex-end', backgroundColor: colors.white, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  gridBookPillText: { fontSize: 11, fontWeight: '700', color: colors.primary },
+
+  // Skeleton
+  skeletonContainer: { flex: 1, padding: 16 },
+  skeletonBanner: { width: '100%', height: 190, backgroundColor: colors.gray200, borderRadius: 20, marginBottom: 24 },
+  skeletonRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
+  skeletonCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.gray200 },
+  skeletonCard: { width: '100%', height: 120, backgroundColor: colors.gray200, borderRadius: 16, marginBottom: 16 },
+
+  // FAB
+  fabWrap: { position: 'absolute', bottom: 20, right: 20, zIndex: 100 },
+  fab: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+});

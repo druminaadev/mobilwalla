@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft, Heart, MapPin, Clock, Phone, Star, Share2, Info, Navigation } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { HomeStackParamList } from '@/types/navigation';
-import { Button } from '@/components/common/Button';
-import { DEMO_SALONS, DEMO_SERVICES, DEMO_STAFF, DEMO_REVIEWS, SALON_AMENITIES, SALON_HOURS } from '@/data/demo';
-import { colors } from '@/constants/colors';
+import { HomeStackParamList } from '../../types/navigation';
+import { Button } from '../../components/common/Button';
+import { DEMO_SALONS, DEMO_SERVICES, DEMO_STAFF, DEMO_REVIEWS, SALON_AMENITIES, SALON_HOURS } from '../../data/demo';
+import { colors } from '../../constants/colors';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'SalonDetail'>;
 const { width } = Dimensions.get('window');
@@ -25,7 +25,7 @@ export default function SalonDetailScreen({ navigation, route }: Props) {
   const reviews = DEMO_REVIEWS.filter((r) => r.salonId === id).concat(DEMO_REVIEWS).slice(0, 3);
   const amenities = SALON_AMENITIES[id] ?? SALON_AMENITIES.default;
 
-  const serviceCategories = [...new Set(services.map((s) => s.categoryId))];
+  const serviceCategories = [...new Set(services.map((s) => s.category))];
 
   // Helper for placeholder images
   const heroImage = 'https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=1200&q=80';
@@ -122,7 +122,7 @@ export default function SalonDetailScreen({ navigation, route }: Props) {
               {serviceCategories.map((cat) => (
                 <View key={cat} style={styles.categoryBlock}>
                   <Text style={styles.categoryTitle}>{cat.toUpperCase()}</Text>
-                  {services.filter((s) => s.categoryId === cat).map((service, index) => (
+                  {services.filter((s) => s.category === cat).map((service, index) => (
                     <View key={service.id} style={[styles.serviceItem, index === services.length - 1 && { borderBottomWidth: 0 }]}>
                       <View style={{ flex: 1, paddingRight: 16 }}>
                         <Text style={styles.serviceName}>{service.name}</Text>
@@ -164,10 +164,10 @@ export default function SalonDetailScreen({ navigation, route }: Props) {
                         </View>
                       )}
                     </View>
-                    <Text style={styles.staffSpec}>{member.specialization}</Text>
+                    <Text style={styles.staffSpec}>{member.specializations?.join(', ')}</Text>
                     <View style={styles.staffMetaRow}>
                       <Star size={12} color={colors.warning} fill={colors.warning} />
-                      <Text style={styles.staffMetaText}>{member.rating} • {member.totalBookings} bookings</Text>
+                      <Text style={styles.staffMetaText}>{member.rating} • {member.reviewCount} reviews</Text>
                     </View>
                   </View>
                 </View>

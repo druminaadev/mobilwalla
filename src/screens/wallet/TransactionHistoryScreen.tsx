@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { ArrowUpRight, ArrowDownLeft, RefreshCw, Gift, Users } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { DEMO_TRANSACTIONS, DEMO_WALLET } from '@/data/demo';
-import { WalletTransaction } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { DEMO_TRANSACTIONS, DEMO_WALLET } from '../../data/demo';
+import { WalletTransaction } from '../../types/models';
+import { colors } from '../../constants/colors';
 
 type FilterTab = 'All' | 'Credit' | 'Debit';
 

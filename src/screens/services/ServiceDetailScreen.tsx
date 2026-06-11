@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, Pressable } from 'react-nati
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Heart, Clock, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ServicesStackParamList } from '@/types/navigation';
+import { ServicesStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<ServicesStackParamList, 'ServiceDetail'>;
 
@@ -55,7 +55,7 @@ export default function ServiceDetailScreen({ route, navigation }: Props) {
           <Text style={styles.price}>₹{service.price}</Text>
         </View>
         <Pressable onPress={() => navigation.navigate('ServiceBooking', { salonId: service.salonId || '1', preSelectedServiceId: service.id })}>
-          <LinearGradient colors={['#FF5C8A', '#FF8BA7']} style={styles.bookButton}>
+          <LinearGradient colors={['#FF5C8A', '#FF5C8A']} style={styles.bookButton}>
             <Text style={styles.bookText}>Book Now</Text>
           </LinearGradient>
         </Pressable>

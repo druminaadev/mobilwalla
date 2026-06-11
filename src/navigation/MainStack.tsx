@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, LayoutGrid, Calendar, User, ShoppingBag } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
-import { useNotificationStore } from '@/store/notificationStore';
+import { Home, Tag, Calendar, User, ShoppingBag } from 'lucide-react-native';
+import { colors } from '../constants/colors';
+import { useNotificationStore } from '../store/notificationStore';
 import HomeStack from './HomeStack';
-import ServicesStack from './ServicesStack';
+import OffersStack from './OffersStack';
 import BookingsStack from './BookingsStack';
 import ShopStack from './ShopStack';
 import ProfileStack from './ProfileStack';
@@ -36,11 +36,11 @@ export default function MainStack() {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           borderTopWidth: 1,
-          borderTopColor: colors.border,
+          borderTopColor: '#EDE9E3',
           paddingBottom: 8,
           paddingTop: 8,
           height: 64,
-          backgroundColor: 'white',
+          backgroundColor: '#F8FAFC',
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
       }}
@@ -54,11 +54,11 @@ export default function MainStack() {
         }}
       />
       <Tab.Screen
-        name="ServicesTab"
-        component={ServicesStack}
+        name="OffersTab"
+        component={OffersStack}
         options={{
-          tabBarLabel: 'Services',
-          tabBarIcon: ({ color, size }) => <LayoutGrid color={color} size={size} />,
+          tabBarLabel: 'Offers',
+          tabBarIcon: ({ color, size }) => <Tag color={color} size={size} />,
         }}
       />
       <Tab.Screen

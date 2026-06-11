@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Notification } from '@/types/models';
-import { DEMO_NOTIFICATIONS } from '@/data/demo';
+import { Notification } from '../types/models';
+import { DEMO_NOTIFICATIONS } from '../data/demo';
 
 interface NotificationState {
   notifications: Notification[];

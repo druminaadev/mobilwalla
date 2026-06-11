@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, Pressable, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '@/types/navigation';
+import { HomeStackParamList } from '../../types/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -37,7 +37,7 @@ export default function TeamScreen() {
         </View>
         <Text style={styles.bio}>Passionate about creating stunning transformations</Text>
         <Pressable onPress={() => navigation.navigate('ArtistProfile', { artist: item })}>
-          <LinearGradient colors={['#FF5C8A', '#FF8BA7']} style={styles.bookButton}>
+          <LinearGradient colors={['#FF5C8A', '#FF5C8A']} style={styles.bookButton}>
             <Text style={styles.bookText}>Book with {item.name.split(' ')[0]} →</Text>
           </LinearGradient>
         </Pressable>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 20, marginBottom: 12 },
   stat: { fontSize: 14, fontWeight: '600', color: '#1A1B2E' },
   specialties: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  tag: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#FFF0F5', borderRadius: 20 },
+  tag: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#F8FAFC', borderRadius: 20 },
   tagText: { fontSize: 12, fontWeight: '600', color: '#FF5C8A' },
   bio: { fontSize: 14, color: '#64748B', marginBottom: 16, lineHeight: 20 },
   bookButton: { padding: 14, borderRadius: 12, alignItems: 'center' },

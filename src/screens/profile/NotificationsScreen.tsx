@@ -7,9 +7,9 @@ import {
   ArrowLeft, Bell, Tag, Calendar, Wallet, Star,
   Trash2, CheckCheck, BellOff, Clock,
 } from 'lucide-react-native';
-import { useNotificationStore } from '@/store/notificationStore';
-import { Notification } from '@/types/models';
-import { colors } from '@/constants/colors';
+import { useNotificationStore } from '../../store/notificationStore';
+import { Notification } from '../../types/models';
+import { colors } from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -17,7 +17,7 @@ const { width } = Dimensions.get('window');
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   booking:  { icon: Calendar, color: colors.primary,   bg: '#EEF2FF', label: 'Booking'  },
-  offer:    { icon: Tag,      color: colors.secondary,  bg: '#FCE7F3', label: 'Offers'   },
+  offer:    { icon: Tag,      color: colors.accent,  bg: '#FCE7F3', label: 'Offers'   },
   reminder: { icon: Clock,    color: colors.warning,    bg: '#FEF3C7', label: 'Reminder' },
   wallet:   { icon: Wallet,   color: colors.success,    bg: '#D1FAE5', label: 'Wallet'   },
   loyalty:  { icon: Star,     color: '#F59E0B',         bg: '#FEF9C3', label: 'Loyalty'  },

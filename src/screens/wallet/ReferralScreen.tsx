@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Clipboard } from 'react-native';
 import { Copy, Share2, Gift, Users, IndianRupee, Check } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { DEMO_USER } from '@/data/demo';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
+import { DEMO_USER } from '../../data/demo';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/constants/colors';
+import { colors } from '../../constants/colors';
 
 const REFERRAL_CODE = 'PRIYA100';
 

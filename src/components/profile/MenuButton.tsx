@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import { colors } from '../../constants/colors';
 
 interface MenuButtonProps {
   icon: LucideIcon;

@@ -70,7 +70,7 @@ export default function ReviewsScreen() {
       </ScrollView>
 
       <Pressable style={styles.writeButton}>
-        <LinearGradient colors={['#FF5C8A', '#FF8BA7']} style={styles.gradient}>
+        <LinearGradient colors={['#FF5C8A', '#FF5C8A']} style={styles.gradient}>
           <Text style={styles.writeButtonText}>+ Write a Review</Text>
         </LinearGradient>
       </Pressable>

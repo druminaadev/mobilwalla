@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Pressable } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '@/types/navigation';
+import { HomeStackParamList } from '../../types/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ArtistProfile'>;
@@ -65,7 +65,7 @@ export default function ArtistProfileScreen({ navigation, route }: Props) {
       </ScrollView>
 
       <Pressable style={styles.bookButton}>
-        <LinearGradient colors={['#FF5C8A', '#FF8BA7']} style={styles.gradient}>
+        <LinearGradient colors={['#FF5C8A', '#FF5C8A']} style={styles.gradient}>
           <Text style={styles.bookText}>Book with {artist.name.split(' ')[0]}</Text>
         </LinearGradient>
       </Pressable>

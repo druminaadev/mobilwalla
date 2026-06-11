@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
 import { Phone } from 'lucide-react-native';
-import { designTokens } from '@/theme/tokens';
+import { designTokens } from '../../screens/home/theme/tokens';
 
 interface LuxuryInputProps extends TextInputProps {
   label: string;
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   inputFocused: {
-    borderColor: designTokens.colors.primary,
+    borderColor: '#FF5C8A',
   },
   input: {
     flex: 1,
