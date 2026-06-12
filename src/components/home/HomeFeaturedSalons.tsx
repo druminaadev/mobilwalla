@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star } from 'lucide-react-native';
+import { Star, ChevronRight } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { SALONS } from '../../data/mockHomeData';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +20,10 @@ export const HomeFeaturedSalons = () => {
     <Animated.View entering={FadeInUp.delay(400)} style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Featured Salons</Text>
-        <TouchableOpacity><Text style={styles.seeAllText}>View All →</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.seeAllBtn}>
+          <Text style={styles.seeAllText}>View All</Text>
+          <ChevronRight size={16} color={colors.textTertiary} />
+        </TouchableOpacity>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={width - 64} decelerationRate="fast" contentContainerStyle={styles.featuredScroll}>
         {SALONS.filter(s => s.isFeatured).map((salon) => (
@@ -53,11 +56,12 @@ export const HomeFeaturedSalons = () => {
 
 const styles = StyleSheet.create({
   section: { marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
-  seeAllText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 12, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.3 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center' },
+  seeAllText: { fontSize: 13, fontWeight: '600', color: colors.textTertiary },
   featuredScroll: { paddingHorizontal: 16, gap: 16 },
-  featuredCard: { width: width - 80, height: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.gray100, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  featuredCard: { width: width - 80, height: 220, borderRadius: 20, overflow: 'hidden', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.gray100 },
   featuredImg: { width: '100%', height: '100%' },
   featuredOverlay: { position: 'absolute', inset: 0, top: '40%' } as any,
   featuredTopRow: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Scissors, Smile, Sparkles, Tag, Heart, Copy } from 'lucide-react-native';
+import { ArrowLeft, Scissors, Smile, Sparkles, Tag, Heart, Copy, Star } from 'lucide-react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors } from '@/constants/colors';
@@ -83,6 +83,12 @@ const OFFERS: Offer[] = [
     image: 'https://images.unsplash.com/photo-1595476108010-b4d1f10d5e43?auto=format&fit=crop&w=800&q=80',
     category: 'hair',
   },
+];
+
+const BEST_SELLERS = [
+  { id: '1', name: 'Keratin Repair Serum', brand: 'L\'Oréal Paris', price: 899, rating: 4.8, image: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=400&q=80' },
+  { id: '7', name: 'Hyaluronic Serum', brand: 'The Ordinary', price: 2199, rating: 4.9, image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80' },
+  { id: '2', name: 'Vitamin C Cream', brand: 'Neutrogena', price: 1299, rating: 4.5, image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=400&q=80' },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -221,6 +227,38 @@ export default function OffersScreen({ navigation }: Props) {
             </View>
           )}
         </View>
+
+        {/* Featured Products on Offer */}
+        <View style={[styles.sectionTitleRow, { marginTop: 32 }]}>
+          <Text style={styles.sectionTitle}>Featured Products</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productScroll}>
+          {BEST_SELLERS.map((item, i) => (
+            <Animated.View 
+              key={item.id} 
+              entering={FadeInDown.delay(300 + i * 100).springify()}
+              style={styles.productCard} 
+            >
+              <View style={styles.productImageWrap}>
+                <Image source={{ uri: item.image }} style={styles.productImage} />
+                <TouchableOpacity style={styles.wishBtn}>
+                  <Heart size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.productInfo}>
+                <Text style={styles.productBrand}>{item.brand}</Text>
+                <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.productPrice}>₹{item.price}</Text>
+                  <View style={styles.ratingWrap}>
+                    <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                    <Text style={styles.ratingText}>{item.rating}</Text>
+                  </View>
+                </View>
+              </View>
+            </Animated.View>
+          ))}
+        </ScrollView>
 
       </ScrollView>
     </View>
@@ -492,4 +530,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 40,
   },
+  productScroll: { paddingHorizontal: 20, gap: 16, paddingBottom: 20 },
+  productCard: { width: 160, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.gray100 },
+  productImageWrap: { width: '100%', height: 160, backgroundColor: colors.gray50 },
+  productImage: { width: '100%', height: '100%' },
+  wishBtn: { position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  productInfo: { padding: 12 },
+  productBrand: { fontSize: 11, color: colors.textSecondary, fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
+  productName: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  productPrice: { fontSize: 16, fontWeight: '800', color: colors.primary },
+  ratingWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.gray50, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  ratingText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
 });

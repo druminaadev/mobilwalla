@@ -34,10 +34,10 @@ export const HomeSearchBar = () => {
 };
 
 const styles = StyleSheet.create({
-  searchStickyContainer: { backgroundColor: colors.background, paddingBottom: 12, zIndex: 10 },
+  searchStickyContainer: { backgroundColor: '#fff', paddingBottom: 12, zIndex: 10 },
   searchRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12 },
-  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, height: 50, borderRadius: 25, paddingHorizontal: 16, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gray50, height: 50, borderRadius: 16, paddingHorizontal: 16, gap: 10 },
   searchPlaceholder: { flex: 1, fontSize: 15, color: colors.textTertiary, fontWeight: '500' },
-  filterBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  filterBtn: { width: 50, height: 50, borderRadius: 16, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' },
   filterIcon: { color: colors.white, fontSize: 20, fontWeight: '800' },
 });

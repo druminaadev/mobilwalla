@@ -37,10 +37,10 @@ export const HomeTrendingServices = () => {
 
 const styles = StyleSheet.create({
   section: { marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 12, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.3 },
   gridWrap: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 16 },
-  gridCard: { width: (width - 48) / 2, height: 150, borderRadius: 16, overflow: 'hidden' },
+  gridCard: { width: (width - 48) / 2, height: 150, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.gray100 },
   gridImg: { width: '100%', height: '100%' },
   gridOverlay: { position: 'absolute', inset: 0, justifyContent: 'flex-end', padding: 12 } as any,
   gridName: { fontSize: 13, fontWeight: '700', color: colors.white, marginBottom: 2 },

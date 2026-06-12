@@ -1,54 +1,55 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Animated, Alert, Dimensions,
+  Alert, Dimensions, Platform, StatusBar
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Bell, Tag, Calendar, Wallet, Star,
-  Trash2, CheckCheck, BellOff, Clock,
+  Trash2, CheckCheck, BellOff, Clock, ChevronRight
 } from 'lucide-react-native';
 import { useNotificationStore } from '../../store/notificationStore';
 import { Notification } from '../../types/models';
 import { colors } from '../../constants/colors';
+import Animated, { FadeInUp, Layout, ZoomIn } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
-// ─── Config ──────────────────────────────────────────────────────────────────
-
+// --- Config ---
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-  booking:  { icon: Calendar, color: colors.primary,   bg: '#EEF2FF', label: 'Booking'  },
-  offer:    { icon: Tag,      color: colors.accent,  bg: '#FCE7F3', label: 'Offers'   },
-  reminder: { icon: Clock,    color: colors.warning,    bg: '#FEF3C7', label: 'Reminder' },
-  wallet:   { icon: Wallet,   color: colors.success,    bg: '#D1FAE5', label: 'Wallet'   },
-  loyalty:  { icon: Star,     color: '#F59E0B',         bg: '#FEF9C3', label: 'Loyalty'  },
+  booking:  { icon: Calendar, color: colors.primary,   bg: '#FFE4E6', label: 'Booking'  },
+  offer:    { icon: Tag,      color: '#8B5CF6',        bg: '#EDE9FE', label: 'Offer'    },
+  reminder: { icon: Clock,    color: '#F59E0B',        bg: '#FEF3C7', label: 'Reminder' },
+  wallet:   { icon: Wallet,   color: '#10B981',        bg: '#D1FAE5', label: 'Wallet'   },
+  loyalty:  { icon: Star,     color: '#F59E0B',        bg: '#FEF9C3', label: 'Loyalty'  },
 };
 
 const FILTER_TABS = ['All', 'Unread', 'Booking', 'Offers', 'Wallet'];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
+// --- Helpers ---
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
   const hrs  = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  if (mins < 60)  return `${mins}m ago`;
-  if (hrs  < 24)  return `${hrs}h ago`;
-  if (days < 7)   return `${days}d ago`;
+  if (mins < 60)  return `${mins || 1}m`;
+  if (hrs  < 24)  return `${hrs}h`;
+  if (days < 7)   return `${days}d`;
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
 function groupByDate(notifications: Notification[]): { title: string; data: Notification[] }[] {
-  const today    = new Date(); today.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
   const groups: Record<string, Notification[]> = {};
 
   notifications.forEach((n) => {
     const d = new Date(n.createdAt); d.setHours(0,0,0,0);
     let key: string;
-    if (d.getTime() === today.getTime())     key = 'Today';
+    if (d.getTime() === today.getTime()) key = 'Today';
     else if (d.getTime() === yesterday.getTime()) key = 'Yesterday';
-    else key = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' });
+    else key = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    
     if (!groups[key]) groups[key] = [];
     groups[key].push(n);
   });
@@ -56,78 +57,9 @@ function groupByDate(notifications: Notification[]): { title: string; data: Noti
   return Object.entries(groups).map(([title, data]) => ({ title, data }));
 }
 
-// ─── Swipeable Row ────────────────────────────────────────────────────────────
-
-function NotifRow({
-  item,
-  onPress,
-  onDelete,
-}: {
-  item: Notification;
-  onPress: () => void;
-  onDelete: () => void;
-}) {
-  const translateX = useRef(new Animated.Value(0)).current;
-  const cfg = TYPE_CONFIG[item.type] ?? TYPE_CONFIG.reminder;
-  const Icon = cfg.icon;
-
-  const swipeLeft = () => {
-    Animated.spring(translateX, { toValue: -80, useNativeDriver: true, tension: 80 }).start();
-  };
-  const resetSwipe = () => {
-    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
-  };
-
-  return (
-    <View style={row.wrap}>
-      {/* Delete reveal */}
-      <View style={row.deleteReveal}>
-        <TouchableOpacity style={row.deleteBtn} onPress={onDelete}>
-          <Trash2 size={20} color="white" />
-          <Text style={row.deleteBtnText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Animated.View style={{ transform: [{ translateX }] }}>
-        <TouchableOpacity
-          style={[row.item, !item.isRead && row.itemUnread]}
-          onPress={onPress}
-          onLongPress={swipeLeft}
-          onBlur={resetSwipe}
-          activeOpacity={0.85}
-        >
-          {/* Unread indicator */}
-          {!item.isRead && <View style={row.unreadBar} />}
-
-          <View style={[row.iconWrap, { backgroundColor: cfg.bg }]}>
-            <Icon size={20} color={cfg.color} />
-          </View>
-
-          <View style={row.content}>
-            <View style={row.topRow}>
-              <Text style={[row.title, !item.isRead && row.titleUnread]} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <Text style={row.time}>{timeAgo(item.createdAt)}</Text>
-            </View>
-            <Text style={row.body} numberOfLines={2}>{item.body}</Text>
-
-            <View style={row.bottomRow}>
-              <View style={[row.typeBadge, { backgroundColor: cfg.bg }]}>
-                <Text style={[row.typeBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
-              </View>
-              {!item.isRead && <View style={row.unreadDot} />}
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
-  );
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-
+// --- Main Screen ---
 export default function NotificationsScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { notifications, unreadCount, markRead, markAllRead, deleteNotification, clearAll } = useNotificationStore();
   const [activeFilter, setActiveFilter] = useState('All');
 
@@ -145,51 +77,56 @@ export default function NotificationsScreen({ navigation }: any) {
 
   const handlePress = (item: Notification) => {
     markRead(item.id);
-    // Deep-link navigation based on type
+    
+    // Accurate Redirection Routing
     if ((item.type === 'booking' || item.type === 'reminder') && item.data?.bookingId) {
       navigation.navigate('BookingsTab', { screen: 'BookingDetail', params: { id: item.data.bookingId } });
+    } else if (item.type === 'offer') {
+      navigation.navigate('OffersTab');
+    } else if (item.type === 'wallet') {
+      navigation.navigate('ProfileTab', { screen: 'WalletHome' });
+    } else if (item.type === 'loyalty') {
+      navigation.navigate('ProfileTab', { screen: 'MyCoupon' });
     }
   };
 
   const handleClearAll = () => {
-    Alert.alert('Clear All', 'Remove all notifications?', [
+    Alert.alert('Clear All', 'Are you sure you want to delete all notifications?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Clear All', style: 'destructive', onPress: clearAll },
     ]);
   };
 
-  // Render flat list data — section headers + items interleaved
-  const flatData: ({ type: 'header'; title: string } | { type: 'item'; item: Notification })[] = [];
+  const flatData: ({ type: 'header'; title: string } | { type: 'item'; item: Notification; index: number })[] = [];
+  let indexCounter = 0;
   groups.forEach((g) => {
     flatData.push({ type: 'header', title: g.title });
-    g.data.forEach((item) => flatData.push({ type: 'item', item }));
+    g.data.forEach((item) => {
+      flatData.push({ type: 'item', item, index: indexCounter });
+      indexCounter++;
+    });
   });
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
+      {Platform.OS === 'ios' && <StatusBar barStyle="dark-content" />}
+      
+      {/* HEADER */}
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.headerMid}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          {uCount > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{uCount}</Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
+        <Text style={styles.headerTitle}>Notifications</Text>
+        <TouchableOpacity 
           onPress={markAllRead}
           disabled={uCount === 0}
-          style={[styles.markAllBtn, uCount === 0 && { opacity: 0.3 }]}
+          style={styles.headerRightBtn}
         >
-          <CheckCheck size={18} color={colors.primary} />
+          <CheckCheck size={20} color={uCount > 0 ? colors.primary : colors.gray300} />
         </TouchableOpacity>
       </View>
 
-      {/* Filter Tabs */}
+      {/* FILTER TABS */}
       <View style={styles.filterWrap}>
         <FlatList
           data={FILTER_TABS}
@@ -204,6 +141,7 @@ export default function NotificationsScreen({ navigation }: any) {
               <TouchableOpacity
                 style={[styles.filterTab, active && styles.filterTabActive]}
                 onPress={() => setActiveFilter(item)}
+                activeOpacity={0.8}
               >
                 <Text style={[styles.filterTabText, active && styles.filterTabTextActive]}>{item}</Text>
                 {unreadInTab > 0 && (
@@ -217,53 +155,72 @@ export default function NotificationsScreen({ navigation }: any) {
         />
       </View>
 
-      {/* Summary bar */}
-      {uCount > 0 && (
-        <View style={styles.summaryBar}>
-          <Bell size={14} color={colors.primary} />
-          <Text style={styles.summaryText}>{uCount} unread notification{uCount > 1 ? 's' : ''}</Text>
-          <TouchableOpacity onPress={markAllRead}>
-            <Text style={styles.markAllText}>Mark all read</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* List */}
+      {/* NOTIFICATION LIST */}
       {flatData.length === 0 ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <BellOff size={48} color={colors.gray300} />
+        <Animated.View entering={FadeInUp.delay(200)} style={styles.empty}>
+          <View style={styles.emptyIconWrap}>
+            <BellOff size={40} color={colors.textTertiary} />
           </View>
-          <Text style={styles.emptyTitle}>No notifications</Text>
+          <Text style={styles.emptyTitle}>No notifications yet</Text>
           <Text style={styles.emptyBody}>
             {activeFilter === 'All'
-              ? "You're all caught up! New notifications will appear here."
-              : `No ${activeFilter.toLowerCase()} notifications yet.`}
+              ? "When you get notifications, they'll show up here."
+              : `You have no ${activeFilter.toLowerCase()} notifications.`}
           </Text>
-        </View>
+        </Animated.View>
       ) : (
         <FlatList
           data={flatData}
           keyExtractor={(item, i) => (item.type === 'header' ? `h-${item.title}` : `n-${item.item.id}`)}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom, 40) }]}
           renderItem={({ item }) => {
             if (item.type === 'header') {
               return <Text style={styles.sectionHeader}>{item.title}</Text>;
             }
+            
+            const nItem = item.item;
+            const cfg = TYPE_CONFIG[nItem.type] ?? TYPE_CONFIG.reminder;
+            const Icon = cfg.icon;
+
             return (
-              <NotifRow
-                item={item.item}
-                onPress={() => handlePress(item.item)}
-                onDelete={() => deleteNotification(item.item.id)}
-              />
+              <Animated.View entering={FadeInUp.delay(item.index * 50)} layout={Layout.springify()}>
+                <TouchableOpacity
+                  style={[styles.notifCard, !nItem.isRead && styles.notifCardUnread]}
+                  onPress={() => handlePress(nItem)}
+                  activeOpacity={0.85}
+                >
+                  {!nItem.isRead && <View style={styles.unreadIndicator} />}
+                  
+                  <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
+                    <Icon size={20} color={cfg.color} />
+                  </View>
+                  
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <Text style={[styles.cardTitle, !nItem.isRead && styles.cardTitleUnread]} numberOfLines={1}>
+                        {nItem.title}
+                      </Text>
+                      <Text style={styles.cardTime}>{timeAgo(nItem.createdAt)}</Text>
+                    </View>
+                    <Text style={styles.cardBody} numberOfLines={2}>{nItem.body}</Text>
+                  </View>
+
+                  <TouchableOpacity 
+                    style={styles.deleteBtn}
+                    onPress={() => deleteNotification(nItem.id)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Trash2 size={16} color={colors.gray300} />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              </Animated.View>
             );
           }}
-          contentContainerStyle={styles.listContent}
           ListFooterComponent={
             notifications.length > 0 ? (
               <TouchableOpacity style={styles.clearAllBtn} onPress={handleClearAll}>
-                <Trash2 size={15} color={colors.error} />
-                <Text style={styles.clearAllText}>Clear all notifications</Text>
+                <Text style={styles.clearAllText}>Clear All Notifications</Text>
               </TouchableOpacity>
             ) : null
           }
@@ -273,55 +230,55 @@ export default function NotificationsScreen({ navigation }: any) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const row = StyleSheet.create({
-  wrap: { position: 'relative' },
-  deleteReveal: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center' },
-  deleteBtn: { alignItems: 'center', gap: 4 },
-  deleteBtnText: { fontSize: 11, fontWeight: '700', color: 'white' },
-  item: { flexDirection: 'row', padding: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12 },
-  itemUnread: { backgroundColor: '#F8F9FF' },
-  unreadBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.primary, borderRadius: 2 },
-  iconWrap: { width: 46, height: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
-  content: { flex: 1 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
-  title: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, flex: 1, marginRight: 8 },
-  titleUnread: { fontWeight: '700' },
-  time: { fontSize: 11, color: colors.textTertiary, flexShrink: 0 },
-  body: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: 8 },
-  bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  typeBadgeText: { fontSize: 11, fontWeight: '700' },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-});
-
+// --- Styles ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FF' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 58, paddingBottom: 12, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
-  headerMid: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  countBadge: { paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.primary, borderRadius: 10 },
-  countBadgeText: { fontSize: 12, fontWeight: '700', color: 'white' },
-  markAllBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primaryLight, justifyContent: 'center', alignItems: 'center' },
-  filterWrap: { backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: colors.border },
-  filterList: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
-  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: colors.background, borderRadius: 20, borderWidth: 1.5, borderColor: 'transparent' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingHorizontal: 16, 
+    paddingBottom: 16, 
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray100
+  },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gray50, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
+  headerRightBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+
+  filterWrap: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: colors.gray100, paddingBottom: 12 },
+  filterList: { paddingHorizontal: 16, paddingTop: 12, gap: 10 },
+  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.gray50, borderRadius: 20, borderWidth: 1, borderColor: colors.gray100 },
   filterTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterTabText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  filterTabTextActive: { color: 'white' },
-  filterBadge: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center' },
-  filterBadgeText: { fontSize: 10, fontWeight: '700', color: 'white' },
-  summaryBar: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.primaryLight },
-  summaryText: { flex: 1, fontSize: 13, fontWeight: '600', color: colors.primary },
-  markAllText: { fontSize: 13, fontWeight: '700', color: colors.primary },
-  sectionHeader: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
-  listContent: { paddingBottom: 32 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, gap: 12 },
-  emptyIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  emptyBody: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  clearAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, margin: 16, padding: 14, backgroundColor: colors.errorLight, borderRadius: 12 },
-  clearAllText: { fontSize: 14, fontWeight: '600', color: colors.error },
+  filterTabTextActive: { color: '#fff' },
+  filterBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  filterBadgeText: { fontSize: 10, fontWeight: '800', color: colors.primary },
+
+  listContent: { paddingHorizontal: 16, paddingTop: 8 },
+  sectionHeader: { fontSize: 13, fontWeight: '800', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 24, marginBottom: 12, paddingLeft: 4 },
+  
+  notifCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 20, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  notifCardUnread: { backgroundColor: '#FFFAFB', borderColor: '#FF5C8A20', borderWidth: 1 },
+  unreadIndicator: { position: 'absolute', top: '50%', left: 0, width: 4, height: 24, backgroundColor: colors.primary, borderTopRightRadius: 4, borderBottomRightRadius: 4, marginTop: -12 },
+  
+  iconWrap: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  cardContent: { flex: 1, marginRight: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  cardTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, flex: 1, marginRight: 8 },
+  cardTitleUnread: { fontWeight: '800' },
+  cardTime: { fontSize: 12, fontWeight: '500', color: colors.textTertiary },
+  cardBody: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  
+  deleteBtn: { padding: 8 },
+
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  emptyIconWrap: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.gray50, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
+  emptyBody: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+
+  clearAllBtn: { marginVertical: 24, alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 24, backgroundColor: colors.error + '15', borderRadius: 20 },
+  clearAllText: { fontSize: 14, fontWeight: '700', color: colors.error },
 });

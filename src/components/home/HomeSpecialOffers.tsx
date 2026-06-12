@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { ChevronRight } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { OFFERS } from '../../data/mockHomeData';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +17,10 @@ export const HomeSpecialOffers = () => {
     <Animated.View entering={FadeInUp.delay(500)} style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Hot Deals 🔥</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Offers')}><Text style={styles.seeAllText}>See All</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Offers')} style={styles.seeAllBtn}>
+          <Text style={styles.seeAllText}>See All</Text>
+          <ChevronRight size={16} color={colors.textTertiary} />
+        </TouchableOpacity>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersScroll}>
         {OFFERS.map((offer) => (
@@ -41,11 +45,12 @@ export const HomeSpecialOffers = () => {
 
 const styles = StyleSheet.create({
   section: { marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
-  seeAllText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 12, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.3 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center' },
+  seeAllText: { fontSize: 13, fontWeight: '600', color: colors.textTertiary },
   offersScroll: { paddingHorizontal: 16, gap: 16 },
-  offerCard: { width: 260, height: 100, flexDirection: 'row', backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  offerCard: { width: 260, height: 100, flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.gray100 },
   offerImg: { width: 100, height: 100 },
   offerInfo: { flex: 1, padding: 12, justifyContent: 'center' },
   offerDiscount: { fontSize: 24, fontWeight: '800', marginBottom: 2 },

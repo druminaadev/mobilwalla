@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Sparkles } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { BANNERS } from '../../data/mockHomeData';
 
@@ -28,27 +29,28 @@ export const HomeHeroBanner = () => {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={(e) => {
-          bannerIndex.value = e.nativeEvent.contentOffset.x / (width - 32);
+          bannerIndex.value = e.nativeEvent.contentOffset.x / width;
         }}
         scrollEventThrottle={16}
       >
-        {BANNERS.map((banner) => (
+        {BANNERS.map((banner, index) => (
           <View key={banner.id} style={styles.bannerContainer}>
-            <Image source={banner.image} style={styles.bannerImg} />
-            <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']} style={styles.bannerOverlay}>
-              <View style={styles.bannerContent}>
-                <View style={styles.bannerTag}><Text style={styles.bannerTagText}>{banner.tag}</Text></View>
-                <Text style={styles.bannerTitle}>{banner.title}</Text>
-                <Text style={styles.bannerSub}>{banner.sub}</Text>
-                <TouchableOpacity style={styles.bookNowBtn}>
-                  <Text style={styles.bookNowText}>Book Now</Text>
+            <LinearGradient colors={['#FF5C8A', '#FF3366']} style={styles.heroBanner}>
+              <View style={styles.heroContent}>
+                <View style={styles.heroTag}>
+                  <Sparkles size={12} color="#FF5C8A" />
+                  <Text style={styles.heroTagText}>{banner.tag}</Text>
+                </View>
+                <Text style={styles.heroTitle}>{banner.title}</Text>
+                <Text style={styles.heroSub}>{banner.sub}</Text>
+                <TouchableOpacity style={styles.heroCta}>
+                  <Text style={styles.heroCtaText}>Book Now</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.discountBadge}>
-                <LinearGradient colors={['#FF5C8A', '#FF3366']} style={styles.discountBadgeBg}>
-                  <Text style={styles.discountBadgeText}>{banner.discount}</Text>
-                </LinearGradient>
-              </View>
+              <Image 
+                source={banner.image} 
+                style={styles.heroImage} 
+              />
             </LinearGradient>
           </View>
         ))}
@@ -63,20 +65,17 @@ export const HomeHeroBanner = () => {
 };
 
 const styles = StyleSheet.create({
-  heroSection: { marginBottom: 24 },
-  bannerContainer: { width: width - 32, height: 190, marginHorizontal: 16, borderRadius: 20, overflow: 'hidden' },
-  bannerImg: { width: '100%', height: '100%', resizeMode: 'cover' },
-  bannerOverlay: { position: 'absolute', inset: 0, padding: 20, flexDirection: 'row' } as any,
-  bannerContent: { flex: 1, justifyContent: 'center' },
-  bannerTag: { alignSelf: 'flex-start', backgroundColor: colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginBottom: 12 },
-  bannerTagText: { fontSize: 10, fontWeight: '800', color: colors.primary, letterSpacing: 0.5 },
-  bannerTitle: { fontSize: 22, fontWeight: '800', color: colors.white, lineHeight: 28, marginBottom: 4 },
-  bannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 16 },
-  bookNowBtn: { alignSelf: 'flex-start', backgroundColor: colors.white, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  bookNowText: { fontSize: 13, fontWeight: '700', color: colors.primary },
-  discountBadge: { justifyContent: 'center', alignItems: 'center', width: 64 },
-  discountBadgeBg: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
-  discountBadgeText: { color: colors.white, fontWeight: '800', fontSize: 16, textAlign: 'center' },
+  heroSection: { marginBottom: 24, marginTop: 8 },
+  bannerContainer: { width: width, paddingHorizontal: 16 },
+  heroBanner: { borderRadius: 24, padding: 24, flexDirection: 'row', overflow: 'hidden' },
+  heroContent: { flex: 1, zIndex: 2 },
+  heroTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, marginBottom: 12 },
+  heroTagText: { fontSize: 10, fontWeight: '800', color: '#FF5C8A', letterSpacing: 1 },
+  heroTitle: { fontSize: 24, fontWeight: '800', color: '#fff', marginBottom: 6 },
+  heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: '500', marginBottom: 20 },
+  heroCta: { alignSelf: 'flex-start', backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 16 },
+  heroCtaText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  heroImage: { position: 'absolute', right: -30, bottom: -20, width: 160, height: 160, borderRadius: 80, opacity: 0.9 },
   dotsRow: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 12 },
   dot: { height: 6, borderRadius: 3 },
 });
