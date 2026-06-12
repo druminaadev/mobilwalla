@@ -1,6 +1,7 @@
 import {
   Salon, Service, Staff, Booking, WalletTransaction,
   Review, Notification, User, UserRole, UserStatus,
+  MembershipPlan
 } from '../types/models';
 
 export const DEMO_USER: User = {
@@ -94,15 +95,18 @@ export const DEMO_SALONS: Salon[] = [
 
 export const DEMO_SERVICES: Record<string, Service[]> = {
   s1: [
-    { id: 'sv1', category: 'hair', name: 'Haircut', description: 'Precision cut by senior stylist', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv2', category: 'hair', name: 'Hair Coloring', description: 'Global or highlights with premium color', price: 2000, duration: 120, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv3', category: 'hair', name: 'Beard Trim', description: 'Shape & trim with hot towel finish', price: 200, duration: 20, image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv4', category: 'hair', name: 'Hair Spa', description: 'Deep conditioning treatment', price: 900, duration: 60, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv5', category: 'skin', name: 'Facial', description: 'Deep cleansing brightening facial', price: 800, duration: 60, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv6', category: 'body', name: 'Full Body Massage', description: 'Swedish relaxation massage', price: 1500, duration: 90, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv7', category: 'body', name: 'Waxing (Full)', description: 'Full body Rica waxing', price: 1200, duration: 75, image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv8', category: 'nails', name: 'Manicure', description: 'Classic manicure with polish', price: 400, duration: 45, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80' },
-    { id: 'sv9', category: 'nails', name: 'Pedicure', description: 'Relaxing pedicure with scrub', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80' },
+    { id: 'sv1_m', category: 'hair', name: 'Haircut (Men)', description: 'Precision cut by senior stylist', price: 350, duration: 30, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80', tags: ['MALE'] },
+    { id: 'sv1_f', category: 'hair', name: 'Haircut (Women)', description: 'Layered or precision cut', price: 650, duration: 45, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80', tags: ['FEMALE'] },
+    { id: 'sv2_m', category: 'hair', name: 'Hair Coloring (Men)', description: 'Global or highlights', price: 1000, duration: 60, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80', tags: ['MALE'] },
+    { id: 'sv2_f', category: 'hair', name: 'Hair Coloring (Women)', description: 'Global or highlights with premium color', price: 2500, duration: 120, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80', tags: ['FEMALE'] },
+    { id: 'sv3', category: 'hair', name: 'Beard Trim', description: 'Shape & trim with hot towel finish', price: 200, duration: 20, image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=200&q=80', tags: ['MALE'] },
+    { id: 'sv4', category: 'hair', name: 'Hair Spa', description: 'Deep conditioning treatment', price: 900, duration: 60, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80', tags: ['ALL'] },
+    { id: 'sv5_m', category: 'skin', name: 'Facial (Men)', description: 'Deep cleansing brightening facial', price: 700, duration: 45, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=200&q=80', tags: ['MALE'] },
+    { id: 'sv5_f', category: 'skin', name: 'Facial (Women)', description: 'Premium anti-aging facial', price: 1200, duration: 60, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=200&q=80', tags: ['FEMALE'] },
+    { id: 'sv6', category: 'body', name: 'Full Body Massage', description: 'Swedish relaxation massage', price: 1500, duration: 90, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=200&q=80', tags: ['ALL'] },
+    { id: 'sv7', category: 'body', name: 'Waxing (Full)', description: 'Full body Rica waxing', price: 1200, duration: 75, image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=200&q=80', tags: ['FEMALE'] },
+    { id: 'sv8', category: 'nails', name: 'Manicure', description: 'Classic manicure with polish', price: 400, duration: 45, image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=200&q=80', tags: ['ALL'] },
+    { id: 'sv9', category: 'nails', name: 'Pedicure', description: 'Relaxing pedicure with scrub', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80', tags: ['ALL'] },
   ],
   default: [
     { id: 'sv1', category: 'hair', name: 'Haircut', description: 'Precision cut', price: 500, duration: 45, image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=200&q=80' },
@@ -218,3 +222,55 @@ export const SALON_AMENITIES: Record<string, string[]> = {
 };
 
 export const SALON_HOURS = '9:00 AM – 9:00 PM';
+
+export const DEMO_MEMBERSHIPS: MembershipPlan[] = [
+  {
+    id: 'mem_silver',
+    name: 'Silver Pass',
+    tagline: 'Essential care for your everyday look.',
+    price: 999,
+    durationMonths: 3,
+    benefits: [
+      'Flat 10% off on all services',
+      '1 Free Haircut every month',
+      'Basic priority booking support',
+    ],
+    colorStart: '#BDBBBE',
+    colorEnd: '#9D9EA3',
+    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'mem_gold',
+    name: 'Gold Elite',
+    tagline: 'Premium treatments with priority access.',
+    price: 2499,
+    durationMonths: 6,
+    benefits: [
+      'Flat 20% off on all services',
+      '2 Free Haircuts & 1 Spa every month',
+      'Priority booking & no cancellation fees',
+      'Free beverages during visit',
+    ],
+    colorStart: '#F9D423',
+    colorEnd: '#FF4E50',
+    imageUrl: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=800&q=80',
+    isPopular: true,
+  },
+  {
+    id: 'mem_vip',
+    name: 'Platinum VIP',
+    tagline: 'The ultimate luxury salon experience.',
+    price: 4999,
+    durationMonths: 12,
+    benefits: [
+      'Flat 30% off on all services',
+      'Unlimited standard haircuts',
+      '1 Premium Facial & 1 Spa every month',
+      'Highest priority booking & dedicated stylist',
+      'Complimentary valet parking',
+    ],
+    colorStart: '#434343',
+    colorEnd: '#000000',
+    imageUrl: 'https://images.unsplash.com/photo-1516975080661-46bd8a25c34e?auto=format&fit=crop&w=800&q=80',
+  },
+];

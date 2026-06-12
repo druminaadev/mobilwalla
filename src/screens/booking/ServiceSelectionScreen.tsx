@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Platform,
+  TextInput, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,19 +10,19 @@ import {
   Sparkles, Heart, Brush, Palette, Droplets, X,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeIn, Layout, BounceIn } from 'react-native-reanimated';
+import { FlashList } from '@shopify/flash-list';
+
 import { useBookingStore } from '../../store/bookingStore';
-import { DEMO_SALONS, DEMO_SERVICES } from '../../data/demo';
+import { DEMO_SALONS } from '../../data/demo';
 import { Service } from '../../types/models';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { BookingProgress } from '../../components/booking/BookingProgress';
+import { useServices } from '../../hooks/useServices';
 
 type Props = NativeStackScreenProps<any, any>;
 
-const PINK = colors.primary; // Using primary from our new color scheme
-const GOLD = colors.accent;
-
+const PINK = colors.primary;
 const CAT_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   all:    { label: 'All',     icon: Sparkles, color: colors.primary, bg: colors.primaryLight },
   hair:   { label: 'Hair',    icon: Scissors, color: '#FF3366', bg: '#FFF0F3' },
@@ -39,37 +39,109 @@ export default function ServiceSelectionScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const salonId = route.params?.salonId ?? 's1';
 
-  const { services: selectedServices, addService, removeService, setSalon, resetBooking,
-    getTotal, getTotalDuration } = useBookingStore();
+  const {
+    services: selectedServices, addService, removeService, setSalon, resetBooking,
+    getTotal, getTotalDuration
+  } = useBookingStore();
 
   const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
-  const allServices: Service[] = DEMO_SERVICES[salonId] ?? DEMO_SERVICES.default ?? [];
-  const categories = ['all', ...new Set(allServices.map((s) => s.category))];
+  const { data: allServices = [], isLoading, isError, refetch } = useServices(salonId);
+
+  const categories = useMemo(() => ['all', ...new Set(allServices.map((s) => s.category))], [allServices]);
 
   const [activeCat, setActiveCat] = useState('all');
   const [activeGender, setActiveGender] = useState<GenderToggle>('ALL');
   const [query, setQuery] = useState('');
 
+  // Initial setup
   useEffect(() => { 
-    resetBooking(); 
-    if (salon) {
-      setSalon(salon.id, salon.name, salon.coverImageUrl || salon.logoUrl || '');
+    // We do NOT reset booking here if the user is just navigating back from StaffSelection to edit services.
+    // We only reset if they entered fresh. For now, let's assume they only come fresh from home.
+    // If route.params?.isEditing, skip reset.
+    if (!route.params?.isEditing) {
+      resetBooking(); 
+      if (salon) {
+        setSalon(salon.id, salon.name, salon.coverImageUrl || salon.logoUrl || '');
+      }
+      
+      const preSelectedId = route.params?.preSelectedServiceId;
+      if (preSelectedId && allServices.length > 0) {
+        const serviceToSelect = allServices.find(s => s.id === preSelectedId);
+        if (serviceToSelect && !selectedServices.some(s => s.id === preSelectedId)) {
+          addService(serviceToSelect);
+        }
+      }
     }
-  }, [salonId]);
+  }, [salonId, route.params?.isEditing, route.params?.preSelectedServiceId, allServices.length]);
 
   const filtered = useMemo(() =>
     allServices.filter((s) => {
       const matchCat = activeCat === 'all' || s.category === activeCat;
       const matchQuery = s.name.toLowerCase().includes(query.toLowerCase());
-      // Assuming Service model might get a gender tag in the future, simulating for now
-      // If no gender tag, we just show all.
-      const matchGender = activeGender === 'ALL' || true; 
+      const matchGender = activeGender === 'ALL'
+        ? true // Show all services if 'Unisex'/ALL is selected
+        : !s.tags || s.tags.includes(activeGender) || s.tags.includes('ALL');
       return matchCat && matchQuery && matchGender;
     }), [activeCat, query, activeGender, allServices]);
 
-  const isSelected = (id: string) => selectedServices.some((s) => s.id === id);
-  const toggle = (svc: Service) =>
-    isSelected(svc.id) ? removeService(svc.id) : addService(svc);
+  const isSelected = useCallback((id: string) => selectedServices.some((s) => s.id === id), [selectedServices]);
+  
+  const toggle = useCallback((svc: Service) => {
+    if (isSelected(svc.id)) {
+      removeService(svc.id);
+    } else {
+      // Validate max limit
+      if (selectedServices.length >= 10) {
+        // In a real app, show a Toast here
+        return;
+      }
+      addService(svc);
+    }
+  }, [isSelected, addService, removeService, selectedServices.length]);
+
+  const renderServiceCard = useCallback(({ item: svc, index }: { item: Service, index: number }) => {
+    const selected = isSelected(svc.id);
+    const meta = CAT_META[svc.category] ?? CAT_META.all;
+    const Icon = meta.icon;
+
+    return (
+      <View style={styles.cardWrapper}>
+        <TouchableOpacity
+          style={[styles.card, selected && styles.cardSelected]}
+          onPress={() => toggle(svc)}
+          activeOpacity={0.88}
+        >
+          <View style={[styles.cardIcon, { backgroundColor: selected ? PINK : meta.bg }]}>
+            <Icon size={20} color={selected ? '#fff' : meta.color} />
+          </View>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardName}>{svc.name}</Text>
+            <Text style={styles.cardDesc} numberOfLines={1}>{svc.description}</Text>
+            <View style={styles.cardMeta}>
+              <Clock size={12} color={colors.textTertiary} />
+              <Text style={styles.cardMetaText}>{svc.duration} min</Text>
+            </View>
+          </View>
+          <View style={styles.cardRight}>
+            {svc.discountedPrice ? (
+              <View style={styles.priceContainer}>
+                <Text style={styles.strikethroughPrice}>₹{svc.price}</Text>
+                <Text style={[styles.cardPrice, selected && { color: PINK }]}>₹{svc.discountedPrice}</Text>
+              </View>
+            ) : (
+              <Text style={[styles.cardPrice, selected && { color: PINK }]}>₹{svc.price}</Text>
+            )}
+            
+            <View style={[styles.toggleBtn, selected && styles.toggleBtnOn]}>
+              {selected
+                ? <Minus size={14} color="#fff" strokeWidth={3} />
+                : <Plus  size={14} color={PINK} strokeWidth={3} />}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [isSelected, toggle]);
 
   return (
     <View style={styles.root}>
@@ -120,93 +192,63 @@ export default function ServiceSelectionScreen({ navigation, route }: Props) {
       </View>
 
       {/* Category pills */}
-      <ScrollView
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catList}
-        style={styles.catScroll}
-      >
-        {categories.map((cat, index) => {
-          const meta   = CAT_META[cat] ?? CAT_META.all;
-          const active = activeCat === cat;
-          const Icon   = meta.icon;
-          return (
-            <Animated.View entering={FadeIn.delay(index * 50)} key={cat}>
-              <TouchableOpacity
-                style={[styles.catPill, active && { backgroundColor: meta.color, borderColor: meta.color }]}
-                onPress={() => setActiveCat(cat)}
-                activeOpacity={0.8}
-              >
-                <Icon size={14} color={active ? '#fff' : meta.color} />
-                <Text style={[styles.catPillText, active && { color: '#fff' }]}>{cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.catScrollWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catList}>
+          {categories.map((cat, index) => {
+            const meta   = CAT_META[cat] ?? CAT_META.all;
+            const active = activeCat === cat;
+            const Icon   = meta.icon;
+            return (
+              <View key={cat}>
+                <TouchableOpacity
+                  style={[styles.catPill, active && { backgroundColor: meta.color, borderColor: meta.color }]}
+                  onPress={() => setActiveCat(cat)}
+                  activeOpacity={0.8}
+                >
+                  <Icon size={14} color={active ? '#fff' : meta.color} />
+                  <Text style={[styles.catPillText, active && { color: '#fff' }]}>{cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Services list */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        {filtered.length === 0 && (
-          <View style={styles.empty}>
+      <View style={styles.listContainer}>
+        {isLoading ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading services...</Text>
+          </View>
+        ) : isError ? (
+          <View style={styles.centerBox}>
+            <Text style={styles.errorText}>Failed to load services</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : filtered.length === 0 ? (
+          <View style={styles.centerBox}>
             <Text style={styles.emptyIcon}>🔍</Text>
             <Text style={styles.emptyTitle}>No services found</Text>
           </View>
+        ) : (
+          <FlashList
+            data={filtered}
+            renderItem={renderServiceCard}
+            // @ts-ignore - TS thinks estimatedItemSize is missing from intrinsic attributes
+            estimatedItemSize={90}
+            contentContainerStyle={styles.flashListContent}
+            showsVerticalScrollIndicator={false}
+          />
         )}
-        {filtered.map((svc, index) => {
-          const selected = isSelected(svc.id);
-          const meta = CAT_META[svc.category] ?? CAT_META.all;
-          const Icon = meta.icon;
-          return (
-            <Animated.View 
-              key={svc.id} 
-              entering={FadeInDown.delay(index * 50)} 
-              layout={Layout.springify()}
-            >
-              <TouchableOpacity
-                style={[styles.card, selected && styles.cardSelected]}
-                onPress={() => toggle(svc)}
-                activeOpacity={0.88}
-              >
-                <View style={[styles.cardIcon, { backgroundColor: selected ? PINK : meta.bg }]}>
-                  <Icon size={20} color={selected ? '#fff' : meta.color} />
-                </View>
-                <View style={styles.cardBody}>
-                  <Text style={styles.cardName}>{svc.name}</Text>
-                  <Text style={styles.cardDesc} numberOfLines={1}>{svc.description}</Text>
-                  <View style={styles.cardMeta}>
-                    <Clock size={12} color={colors.textTertiary} />
-                    <Text style={styles.cardMetaText}>{svc.duration} min</Text>
-                  </View>
-                </View>
-                <View style={styles.cardRight}>
-                  {svc.discountedPrice ? (
-                    <View style={styles.priceContainer}>
-                      <Text style={styles.strikethroughPrice}>₹{svc.price}</Text>
-                      <Text style={[styles.cardPrice, selected && { color: PINK }]}>₹{svc.discountedPrice}</Text>
-                    </View>
-                  ) : (
-                    <Text style={[styles.cardPrice, selected && { color: PINK }]}>₹{svc.price}</Text>
-                  )}
-                  
-                  <View style={[styles.toggleBtn, selected && styles.toggleBtnOn]}>
-                    {selected
-                      ? <Minus size={14} color="#fff" strokeWidth={3} />
-                      : <Plus  size={14} color={PINK} strokeWidth={3} />}
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-        <View style={{ height: 160 }} />
-      </ScrollView>
+      </View>
 
-      {/* Footer */}
+      {/* Sticky Bottom Footer Summary */}
       {selectedServices.length > 0 && (
-        <Animated.View 
-          entering={BounceIn}
-          style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}
+        <View 
+          style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
         >
           <View style={styles.footerTop}>
             <View>
@@ -214,16 +256,18 @@ export default function ServiceSelectionScreen({ navigation, route }: Props) {
                 {selectedServices.length} service{selectedServices.length > 1 ? 's' : ''}
                 {'  '}·{'  '}{getTotalDuration()} min
               </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-                <View style={styles.chips}>
-                  {selectedServices.map((s) => (
-                    <TouchableOpacity key={s.id} style={styles.chip} onPress={() => removeService(s.id)}>
-                      <Text style={styles.chipText}>{s.name}</Text>
-                      <X size={10} color="#fff" strokeWidth={3} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
+              <View style={styles.chipsScrollWrap}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.chips}>
+                    {selectedServices.map((s) => (
+                      <TouchableOpacity key={s.id} style={styles.chip} onPress={() => removeService(s.id)}>
+                        <Text style={styles.chipText}>{s.name}</Text>
+                        <X size={10} color="#fff" strokeWidth={3} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
             </View>
             <Text style={styles.footerTotal}>₹{getTotal()}</Text>
           </View>
@@ -237,7 +281,7 @@ export default function ServiceSelectionScreen({ navigation, route }: Props) {
               <ArrowLeft size={18} color="#fff" style={{ transform: [{ rotate: '180deg' }] }} />
             </LinearGradient>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -259,30 +303,16 @@ const styles = StyleSheet.create({
   headerSub:    { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
 
   genderToggleContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: colors.gray100,
-    borderRadius: 12,
-    padding: 4,
+    flexDirection: 'row', marginHorizontal: 16, marginTop: 16,
+    backgroundColor: colors.gray100, borderRadius: 12, padding: 4,
   },
-  genderBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
+  genderBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 },
   genderBtnActive: {
     backgroundColor: colors.white,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2,
   },
-  genderText: {
-    ...typography.subtitle2,
-    color: colors.textSecondary,
-  },
-  genderTextActive: {
-    color: colors.primary,
-  },
+  genderText: { ...typography.subtitle2, color: colors.textSecondary },
+  genderTextActive: { color: colors.primary },
 
   searchWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -291,10 +321,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
   },
-  searchInput: { flex: 1, ...typography.body2, color: colors.textPrimary },
+  searchInput: { flex: 1, ...typography.body2, color: colors.textPrimary, paddingVertical: 0 },
 
-  catScroll: { maxHeight: 52 },
-  catList:   { paddingHorizontal: 16, gap: 8, paddingBottom: 4 },
+  catScrollWrap: { height: 50 },
+  catList: { paddingHorizontal: 16, gap: 8, paddingBottom: 4 },
   catPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
@@ -302,14 +332,21 @@ const styles = StyleSheet.create({
   },
   catPillText: { ...typography.subtitle2, color: colors.textSecondary },
 
-  list: { paddingHorizontal: 16, paddingTop: 14 },
-  empty: { alignItems: 'center', marginTop: 60 },
+  listContainer: { flex: 1 },
+  flashListContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 180 },
+  
+  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
+  loadingText: { ...typography.body2, color: colors.textSecondary, marginTop: 12 },
+  errorText: { ...typography.body1, color: colors.error, marginBottom: 12 },
+  retryBtn: { paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 20 },
+  retryText: { ...typography.button, color: '#fff' },
   emptyIcon: { fontSize: 40, marginBottom: 12 },
   emptyTitle: { ...typography.subtitle1, color: colors.textSecondary },
 
+  cardWrapper: { marginBottom: 12 },
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 12,
+    backgroundColor: '#fff', borderRadius: 18, padding: 14,
     borderWidth: 2, borderColor: 'transparent',
     shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
@@ -340,6 +377,7 @@ const styles = StyleSheet.create({
   footerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
   footerCount: { ...typography.subtitle2, color: colors.textPrimary },
   footerTotal: { ...typography.h2, color: colors.primary },
+  chipsScrollWrap: { height: 32, marginTop: 6 },
   chips: { flexDirection: 'row', gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,

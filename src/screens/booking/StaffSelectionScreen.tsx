@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform,
+  View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
-  ArrowLeft, Star, Check, Zap, Users, ChevronRight, Clock, Award
+  ArrowLeft, Star, Check, Zap, Users, ChevronRight, Award
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, Layout, BounceIn } from 'react-native-reanimated';
+import { FlashList } from '@shopify/flash-list';
+
 import { HomeStackParamList } from '../../types/navigation';
-import { DEMO_STAFF, DEMO_SALONS } from '../../data/demo';
+import { DEMO_SALONS } from '../../data/demo';
 import { useBookingStore } from '../../store/bookingStore';
+import { useStaff } from '../../hooks/useStaff';
+import { Staff } from '../../types/models';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { BookingProgress } from '../../components/booking/BookingProgress';
@@ -21,26 +24,170 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'StaffSelection'>;
 export default function StaffSelectionScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { salonId } = route.params;
+
   const [selected, setSelected] = useState<string>('any');
-  
-  const { services: selectedServices, getTotal, getTotalDuration, setStaff } = useBookingStore();
+
+  const {
+    services: selectedServices,
+    getTotal,
+    getTotalDuration,
+    setStaff,
+    setStaffPriceModifier
+  } = useBookingStore();
 
   const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
-  const staffList = DEMO_STAFF[salonId] ?? DEMO_STAFF.default;
-  const available = staffList.filter((s) => s.isAvailable).length;
+
+  const { data: staffList = [], isLoading, isError, refetch } = useStaff(salonId);
+  const available = useMemo(() => staffList.filter((s) => s.isAvailable).length, [staffList]);
 
   const handleNext = () => {
     if (selected === 'any') {
       setStaff(null);
+      setStaffPriceModifier(1.0);
       navigation.navigate('SlotSelection', { salonId, staffId: null });
     } else {
       const selectedStaff = staffList.find(s => s.id === selected);
       if (selectedStaff) {
         setStaff(selectedStaff);
+        setStaffPriceModifier(selectedStaff.priceModifier || 1.0);
         navigation.navigate('SlotSelection', { salonId, staffId: selected });
       }
     }
   };
+
+  const handleSkip = () => {
+    setStaff(null);
+    setStaffPriceModifier(1.0);
+    navigation.navigate('SlotSelection', { salonId, staffId: null });
+  };
+
+  const renderHeader = () => (
+    <>
+      {/* Available count */}
+      <View style={styles.availBanner}>
+        <View style={styles.availIconWrap}>
+          <Users size={16} color={colors.success} />
+        </View>
+        <Text style={styles.availText}>
+          <Text style={{ fontWeight: '800', color: colors.textPrimary }}>{available} stylists</Text>
+          {' '}available today
+        </Text>
+      </View>
+
+      {/* Any available */}
+      <View>
+        <TouchableOpacity
+          style={[styles.anyCard, selected === 'any' && styles.anyCardActive]}
+          onPress={() => setSelected('any')}
+          activeOpacity={0.9}
+        >
+          {selected === 'any' ? (
+            <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.anyInner}>
+              <View style={styles.anyIconWrap}>
+                <Zap size={24} color={colors.primary} />
+              </View>
+              <View style={styles.anyInfo}>
+                <Text style={[styles.anyTitle, { color: '#fff' }]}>Any Available</Text>
+                <Text style={[styles.anySub, { color: 'rgba(255,255,255,0.85)' }]}>We pick the next free expert for you</Text>
+              </View>
+              <View style={styles.anyCheck}>
+                <Check size={14} color={colors.primary} strokeWidth={3} />
+              </View>
+            </LinearGradient>
+          ) : (
+            <View style={styles.anyInnerInactive}>
+              <View style={styles.anyIconWrapInactive}>
+                <Zap size={24} color={colors.primary} />
+              </View>
+              <View style={styles.anyInfo}>
+                <Text style={styles.anyTitle}>Any Available</Text>
+                <Text style={styles.anySub}>We pick the next free expert for you</Text>
+              </View>
+              <View style={styles.radioEmpty} />
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.orLabel}>— or choose a specific stylist —</Text>
+    </>
+  );
+
+  const renderStaffCard = useCallback(({ item: member, index }: { item: Staff, index: number }) => {
+    const isSelected = selected === member.id;
+    const avatarUri = member.photo
+      ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=606C5D&color=fff&size=200`;
+
+    return (
+      <View>
+        <TouchableOpacity
+          style={[
+            styles.staffCard,
+            isSelected && styles.staffCardActive,
+            !member.isAvailable && styles.staffCardDisabled,
+          ]}
+          onPress={() => member.isAvailable && setSelected(member.id)}
+          activeOpacity={member.isAvailable ? 0.88 : 1}
+        >
+          {/* Avatar */}
+          <View style={styles.avatarWrap}>
+            <Image
+              source={{ uri: avatarUri }}
+              style={[styles.avatar, !member.isAvailable && { opacity: 0.5 }]}
+            />
+            <View style={[
+              styles.statusDot,
+              { backgroundColor: member.isAvailable ? colors.success : colors.gray400 },
+            ]} />
+          </View>
+
+          {/* Info */}
+          <View style={styles.staffInfo}>
+            <View style={styles.staffNameRow}>
+              <Text style={styles.staffName}>{member.name}</Text>
+              {!member.isAvailable && (
+                <View style={styles.busyTag}>
+                  <Text style={styles.busyTagText}>Busy</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.staffSpec, isSelected && { color: colors.primary }]}>
+              {member.designation}
+            </Text>
+
+            {member.specializations && member.specializations.length > 0 && (
+              <Text style={styles.specializations} numberOfLines={1}>
+                {member.specializations.join(' • ')}
+              </Text>
+            )}
+
+            <View style={styles.staffStats}>
+              <View style={styles.statChip}>
+                <Star size={11} color={colors.rating} fill={colors.rating} />
+                <Text style={styles.statText}>{member.rating} ({member.reviewCount})</Text>
+              </View>
+              <View style={styles.statChip}>
+                <Award size={11} color={colors.textSecondary} />
+                <Text style={styles.statText}>{member.experience} yrs exp</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.rightSection}>
+            {member.priceModifier && member.priceModifier > 1.0 ? (
+              <Text style={styles.premiumText}>+{(member.priceModifier * 100 - 100).toFixed(0)}%</Text>
+            ) : <View />}
+            {/* Radio */}
+            {member.isAvailable && (
+              <View style={[styles.radio, isSelected && styles.radioDone]}>
+                {isSelected && <Check size={12} color="#fff" strokeWidth={3} />}
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [selected]);
 
   return (
     <View style={styles.root}>
@@ -53,156 +200,47 @@ export default function StaffSelectionScreen({ navigation, route }: Props) {
           <Text style={styles.headerTitle}>Choose Stylist</Text>
           <Text style={styles.headerSub}>{salon.name}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.skipBtn}
-          onPress={() => {
-            setStaff(null);
-            navigation.navigate('SlotSelection', { salonId, staffId: null });
-          }}
-        >
+        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
 
       <BookingProgress current={2} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        {/* Available count */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.availBanner}>
-          <View style={styles.availIconWrap}>
-            <Users size={16} color={colors.success} />
+      <View style={styles.listContainer}>
+        {isLoading ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading stylists...</Text>
           </View>
-          <Text style={styles.availText}>
-            <Text style={{ fontWeight: '800', color: colors.textPrimary }}>{available} stylists</Text>
-            {' '}available today
-          </Text>
-        </Animated.View>
-
-        {/* Any available */}
-        <Animated.View entering={FadeInDown.delay(150)}>
-          <TouchableOpacity
-            style={[styles.anyCard, selected === 'any' && styles.anyCardActive]}
-            onPress={() => setSelected('any')}
-            activeOpacity={0.9}
-          >
-            {selected === 'any' ? (
-              <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.anyInner}>
-                <View style={styles.anyIconWrap}>
-                  <Zap size={24} color={colors.primary} />
-                </View>
-                <View style={styles.anyInfo}>
-                  <Text style={[styles.anyTitle, { color: '#fff' }]}>Any Available</Text>
-                  <Text style={[styles.anySub, { color: 'rgba(255,255,255,0.85)' }]}>We pick the next free expert for you</Text>
-                </View>
-                <View style={styles.anyCheck}>
-                  <Check size={14} color={colors.primary} strokeWidth={3} />
-                </View>
-              </LinearGradient>
-            ) : (
-              <View style={styles.anyInnerInactive}>
-                <View style={styles.anyIconWrapInactive}>
-                  <Zap size={24} color={colors.primary} />
-                </View>
-                <View style={styles.anyInfo}>
-                  <Text style={styles.anyTitle}>Any Available</Text>
-                  <Text style={styles.anySub}>We pick the next free expert for you</Text>
-                </View>
-                <View style={styles.radioEmpty} />
-              </View>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        <Text style={styles.orLabel}>— or choose a specific stylist —</Text>
-
-        {/* Staff cards */}
-        {staffList.map((member, index) => {
-          const isSelected = selected === member.id;
-          const avatarUri  = member.photo
-            ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=606C5D&color=fff&size=200`;
-
-          return (
-            <Animated.View 
-              key={member.id} 
-              entering={FadeInDown.delay(200 + index * 50)}
-              layout={Layout.springify()}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.staffCard,
-                  isSelected && styles.staffCardActive,
-                  !member.isAvailable && styles.staffCardDisabled,
-                ]}
-                onPress={() => member.isAvailable && setSelected(member.id)}
-                activeOpacity={member.isAvailable ? 0.88 : 1}
-              >
-                {/* Avatar */}
-                <View style={styles.avatarWrap}>
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={[styles.avatar, !member.isAvailable && { opacity: 0.5 }]}
-                  />
-                  <View style={[
-                    styles.statusDot,
-                    { backgroundColor: member.isAvailable ? colors.success : colors.gray400 },
-                  ]} />
-                </View>
-
-                {/* Info */}
-                <View style={styles.staffInfo}>
-                  <View style={styles.staffNameRow}>
-                    <Text style={styles.staffName}>{member.name}</Text>
-                    {!member.isAvailable && (
-                      <View style={styles.busyTag}>
-                        <Text style={styles.busyTagText}>Busy</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={[styles.staffSpec, isSelected && { color: colors.primary }]}>
-                    {member.designation}
-                  </Text>
-                  
-                  {member.specializations && member.specializations.length > 0 && (
-                     <Text style={styles.specializations} numberOfLines={1}>
-                       {member.specializations.join(' • ')}
-                     </Text>
-                  )}
-
-                  <View style={styles.staffStats}>
-                    <View style={styles.statChip}>
-                      <Star size={11} color={colors.rating} fill={colors.rating} />
-                      <Text style={styles.statText}>{member.rating} ({member.reviewCount})</Text>
-                    </View>
-                    <View style={styles.statChip}>
-                      <Award size={11} color={colors.textSecondary} />
-                      <Text style={styles.statText}>{member.experience} yrs exp</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.rightSection}>
-                  {member.premiumCharge ? (
-                     <Text style={styles.premiumText}>+₹{member.premiumCharge}</Text>
-                  ) : <View/>}
-                  {/* Radio */}
-                  {member.isAvailable && (
-                    <View style={[styles.radio, isSelected && styles.radioDone]}>
-                      {isSelected && <Check size={12} color="#fff" strokeWidth={3} />}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-
-        <View style={{ height: 140 }} />
-      </ScrollView>
+        ) : isError ? (
+          <View style={styles.centerBox}>
+            <Text style={styles.errorText}>Failed to load stylists</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : staffList.length === 0 ? (
+          <View style={styles.centerBox}>
+            <Text style={styles.emptyIcon}>👤</Text>
+            <Text style={styles.emptyTitle}>No staff available</Text>
+          </View>
+        ) : (
+          <FlashList
+            data={staffList}
+            renderItem={renderStaffCard}
+            // @ts-ignore - TS thinks estimatedItemSize is missing from intrinsic attributes
+            estimatedItemSize={120}
+            ListHeaderComponent={renderHeader}
+            contentContainerStyle={styles.flashListContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
 
       {/* Footer */}
-      <Animated.View 
-        entering={BounceIn}
-        style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}
+      <View
+        style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
       >
         <View style={styles.footerInfo}>
           <View>
@@ -213,16 +251,13 @@ export default function StaffSelectionScreen({ navigation, route }: Props) {
           </View>
           <Text style={styles.footerTotal}>₹{getTotal()}</Text>
         </View>
-        <TouchableOpacity
-          onPress={handleNext}
-          activeOpacity={0.9}
-        >
+        <TouchableOpacity onPress={handleNext} activeOpacity={0.9}>
           <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.cta}>
             <Text style={styles.ctaText}>Pick Date & Time</Text>
             <ChevronRight size={18} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -239,15 +274,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle:  { ...typography.h3, color: colors.textPrimary },
-  headerSub:    { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
-  skipBtn: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: colors.gray100,
-  },
+  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerSub: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
+  skipBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.gray100 },
   skipText: { ...typography.subtitle2, color: colors.textSecondary },
 
-  list: { paddingHorizontal: 16, paddingTop: 16 },
+  listContainer: { flex: 1 },
+  flashListContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 180 },
+
+  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
+  loadingText: { ...typography.body2, color: colors.textSecondary, marginTop: 12 },
+  errorText: { ...typography.body1, color: colors.error, marginBottom: 12 },
+  retryBtn: { paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 20 },
+  retryText: { ...typography.button, color: '#fff' },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { ...typography.subtitle1, color: colors.textSecondary },
 
   availBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -280,7 +321,7 @@ const styles = StyleSheet.create({
   },
   anyInfo: { flex: 1 },
   anyTitle: { ...typography.subtitle1, color: colors.textPrimary, marginBottom: 3 },
-  anySub:   { ...typography.caption, color: colors.textSecondary },
+  anySub: { ...typography.caption, color: colors.textSecondary },
   anyCheck: {
     width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff',
     justifyContent: 'center', alignItems: 'center',
@@ -295,13 +336,14 @@ const styles = StyleSheet.create({
     color: colors.textTertiary, marginVertical: 16,
   },
 
+  cardWrapper: { marginBottom: 12 },
   staffCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 12,
+    backgroundColor: '#fff', borderRadius: 20, padding: 14,
     borderWidth: 2, borderColor: 'transparent',
     shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  staffCardActive:   { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  staffCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   staffCardDisabled: { opacity: 0.55 },
 
   avatarWrap: { position: 'relative', marginRight: 14 },

@@ -11,6 +11,7 @@ import Animated, { FadeInUp, SlideInDown } from 'react-native-reanimated';
 import { ArrowLeft, Heart, Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Truck } from 'lucide-react-native';
 import { ShopStackParamList } from '../../types/navigation';
 import { colors } from '../../constants/colors';
+import { useWishlistStore } from '../../store/wishlistStore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,7 +23,7 @@ export default function ProductDetailScreen() {
   const route = useRoute<RoutePropType>();
   const insets = useSafeAreaInsets();
   const [qty, setQty] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { toggleProduct, isProductLiked } = useWishlistStore();
 
   // Fallback data if none passed
   const product = route.params?.product ?? {
@@ -32,7 +33,8 @@ export default function ProductDetailScreen() {
     description: 'Transform your hair with our advanced keratin formula. Clinically proven to repair damage, reduce frizz, and add mirror-like shine in just one use.',
   };
 
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const prod = product as any;
+  const discount = Math.round(((prod.originalPrice - prod.price) / prod.originalPrice) * 100);
 
   return (
     <View style={styles.root}>
@@ -49,8 +51,8 @@ export default function ProductDetailScreen() {
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => setIsWishlisted(!isWishlisted)}>
-              <Heart size={22} color={isWishlisted ? '#FF5C8A' : '#fff'} fill={isWishlisted ? '#FF5C8A' : 'transparent'} />
+            <TouchableOpacity style={styles.iconBtn} onPress={() => toggleProduct(product)}>
+              <Heart size={22} color={isProductLiked(product.id) ? '#FF5C8A' : '#fff'} fill={isProductLiked(product.id) ? '#FF5C8A' : 'transparent'} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
               <ShoppingBag size={22} color="#fff" />
@@ -140,7 +142,7 @@ export default function ProductDetailScreen() {
         <View style={styles.footerInner}>
           <View style={styles.footerTotalWrap}>
             <Text style={styles.footerTotalLabel}>Total Price</Text>
-            <Text style={styles.footerTotalVal}>₹{product.price * qty}</Text>
+            <Text style={styles.footerTotalVal}>₹{(product as any).price * qty}</Text>
           </View>
           <TouchableOpacity style={styles.addCartBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Cart')}>
             <Text style={styles.addCartBtnText}>Add to Cart</Text>

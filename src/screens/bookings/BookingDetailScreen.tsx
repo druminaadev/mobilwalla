@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Dimensions, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Dimensions, StatusBar, Linking, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Calendar, Clock, MapPin, Navigation, User, QrCode, Scissors } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, Navigation, User, QrCode, Scissors, Download } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { BookingsStackParamList } from '@/types/navigation';
@@ -63,6 +63,19 @@ export default function BookingDetailScreen({ navigation, route }: Props) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       
+      {/* Header Actions - Moved outside ScrollView for reliable touch events */}
+      <View style={[styles.headerActions, { top: insets.top + 10, zIndex: 100 }]}>
+        <TouchableOpacity 
+          style={styles.backBtn} 
+          onPress={() => navigation.navigate('MyBookings')}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        >
+          <ArrowLeft size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Digital Pass</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* Hero Section */}
@@ -73,15 +86,6 @@ export default function BookingDetailScreen({ navigation, route }: Props) {
             style={styles.heroOverlay}
           />
           
-          {/* Header Actions */}
-          <View style={[styles.headerActions, { top: insets.top + 10 }]}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <ArrowLeft size={24} color="#FFF" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Digital Pass</Text>
-            <View style={{ width: 40 }} />
-          </View>
-
           {/* Salon Info Overlay */}
           <View style={styles.heroBottomContent}>
             <Text style={styles.heroSalonName}>{booking.salonName}</Text>
@@ -190,6 +194,22 @@ export default function BookingDetailScreen({ navigation, route }: Props) {
                 <Text style={styles.paymentMethodText}>Paid via {booking.paymentMethod?.toUpperCase()}</Text>
                 <Text style={styles.paymentStatusText}>✓ SUCCESS</Text>
               </View>
+
+              <View style={styles.invoiceDashedDivider} />
+
+              <TouchableOpacity 
+                style={styles.downloadInvoiceBtn}
+                onPress={() => {
+                  Alert.alert(
+                    'Download Started', 
+                    'Your invoice is downloading...', 
+                    [{ text: 'OK', onPress: () => setTimeout(() => Alert.alert('Success', 'Invoice downloaded successfully to your device!'), 800) }]
+                  );
+                }}
+              >
+                <Download size={18} color={colors.primary} />
+                <Text style={styles.downloadInvoiceText}>Download Invoice</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
 
@@ -200,7 +220,18 @@ export default function BookingDetailScreen({ navigation, route }: Props) {
                 variant="outline" 
                 icon={<Navigation size={18} color={colors.primary} />} 
                 style={styles.actionButtonOutline} 
-                onPress={() => {}}
+                onPress={() => {
+                  const address = encodeURIComponent(`${salon.name}, ${salon.addressLine1}, ${salon.city}`);
+                  const url = Platform.select({
+                    ios: `maps:0,0?q=${address}`,
+                    android: `geo:0,0?q=${address}`,
+                  });
+                  if (url) {
+                    Linking.openURL(url).catch(() => {
+                      Alert.alert('Error', 'Unable to open maps application.');
+                    });
+                  }
+                }}
              />
           </Animated.View>
 
@@ -537,6 +568,20 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.success,
     fontWeight: '700',
+  },
+  downloadInvoiceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  downloadInvoiceText: {
+    ...typography.subtitle2,
+    color: colors.primary,
   },
   actionButtonOutline: {
     backgroundColor: '#FFF',

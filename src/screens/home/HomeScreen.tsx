@@ -166,6 +166,30 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
+        {/* VIP MEMBERSHIP BANNER */}
+        <Animated.View entering={FadeInUp.delay(250)} style={styles.vipBannerWrap}>
+          <TouchableOpacity 
+            activeOpacity={0.9} 
+            onPress={() => navigation.navigate('ProfileTab', { screen: 'MembershipPlans' })}
+          >
+            <LinearGradient
+              colors={['#1A1A1A', '#333333']}
+              style={styles.vipBanner}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.vipBannerContent}>
+                <Crown size={28} color="#F9D423" style={{ marginBottom: 12 }} />
+                <Text style={styles.vipBannerTitle}>Salon VIP Membership</Text>
+                <Text style={styles.vipBannerSub}>Get up to 30% off, free haircuts, and priority bookings.</Text>
+                <View style={styles.vipBannerBtn}>
+                  <Text style={styles.vipBannerBtnText}>View Plans</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
         {/* TOP SALONS */}
         <Animated.View entering={FadeInUp.delay(300)}>
           {renderSectionHeader('Top Salons Near You', () => navigation.navigate('SalonList', {}))}
@@ -320,6 +344,14 @@ const styles = StyleSheet.create({
   catItem: { alignItems: 'center', width: 64 },
   catIconWrap: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   catName: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textAlign: 'center' },
+
+  vipBannerWrap: { paddingHorizontal: 16, marginTop: 24 },
+  vipBanner: { borderRadius: 20, padding: 24, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 6 },
+  vipBannerContent: { alignItems: 'flex-start' },
+  vipBannerTitle: { fontSize: 18, fontWeight: '800', color: '#FFD700', marginBottom: 6 },
+  vipBannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 20, lineHeight: 18 },
+  vipBannerBtn: { backgroundColor: '#F9D423', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
+  vipBannerBtnText: { fontSize: 13, fontWeight: '800', color: '#1A1A1A' },
 
   productScroll: { paddingHorizontal: 16, gap: 16 },
   salonCard: { width: width * 0.65, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },

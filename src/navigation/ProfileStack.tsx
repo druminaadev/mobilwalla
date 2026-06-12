@@ -15,6 +15,8 @@ import AddMoneyScreen from '../screens/wallet/AddMoneyScreen';
 import TransactionHistoryScreen from '../screens/wallet/TransactionHistoryScreen';
 import ReferralScreen from '../screens/wallet/ReferralScreen';
 import MyCouponScreen from '../screens/wallet/MyCouponScreen';
+import MembershipPlansScreen from '../screens/profile/MembershipPlansScreen';
+import MembershipCheckoutScreen from '../screens/profile/MembershipCheckoutScreen';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
@@ -34,6 +36,8 @@ export default function ProfileStack() {
       <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
       <Stack.Screen name="Referral" component={ReferralScreen} />
       <Stack.Screen name="MyCoupon" component={MyCouponScreen} />
+      <Stack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
+      <Stack.Screen name="MembershipCheckout" component={MembershipCheckoutScreen} />
     </Stack.Navigator>
   );
 }

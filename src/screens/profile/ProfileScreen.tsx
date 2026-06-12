@@ -25,6 +25,7 @@ import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { useAuthStore } from '../../store/authStore';
 import { DEMO_WALLET } from '../../data/demo';
+import { SkeletonLoader } from '../../components/home/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -34,6 +35,12 @@ export default function ProfileScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuthStore();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Mock Data
   const userName = user?.name || "Jane Doe";
@@ -76,6 +83,14 @@ export default function ProfileScreen({ navigation }: Props) {
         </TouchableOpacity>
     </Animated.View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <SkeletonLoader />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -142,6 +157,14 @@ export default function ProfileScreen({ navigation }: Props) {
                 subtitle="Update your personal details"
                 onPress={() => navigation.navigate('EditProfile')}
                 delay={200}
+            />
+            <MenuItem 
+                icon={Crown} 
+                color="#F9D423" 
+                title="Memberships" 
+                subtitle="View and upgrade VIP plans"
+                onPress={() => navigation.navigate('MembershipPlans')}
+                delay={225}
             />
             <MenuItem 
                 icon={Wallet} 

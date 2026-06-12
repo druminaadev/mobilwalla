@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Platform, Dimensions,
+  Image, Dimensions, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,9 +9,9 @@ import {
   ArrowLeft, Calendar, Clock, Sun, Sunset, Moon, ChevronRight, Zap,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, BounceIn } from 'react-native-reanimated';
 import { HomeStackParamList } from '../../types/navigation';
 import { useBookingStore } from '../../store/bookingStore';
+import { useTimeSlots } from '../../hooks/useTimeSlots';
 import { DEMO_SALONS, DEMO_STAFF } from '../../data/demo';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
@@ -28,12 +28,10 @@ const DATES = Array.from({ length: 14 }, (_, i) => {
   return d;
 });
 
-const UNAVAILABLE = new Set(['09:30', '11:00', '14:30', '17:00', '18:30']);
-
-const TIME_GROUPS = [
-  { label: 'Morning',   icon: Sun,    color: '#F59E0B', slots: ['09:00','09:30','10:00','10:30','11:00','11:30'] },
-  { label: 'Afternoon', icon: Sunset, color: '#D9A355', slots: ['12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30'] },
-  { label: 'Evening',   icon: Moon,   color: colors.primary, slots: ['16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30'] },
+const TIME_GROUP_META = [
+  { label: 'Morning',   icon: Sun,    color: '#F59E0B' },
+  { label: 'Afternoon', icon: Sunset, color: '#D9A355' },
+  { label: 'Evening',   icon: Moon,   color: colors.primary },
 ];
 
 export default function SlotSelectionScreen({ navigation, route }: Props) {
@@ -42,30 +40,78 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
   const { setDateTime } = useBookingStore();
 
   const [dateIdx, setDateIdx] = useState(0);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<TimeSlot | null>(null);
 
   const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
-  const staff = staffId && staffId !== 'any' && staffId !== null
+  const staff = staffId && staffId !== 'any' 
     ? (DEMO_STAFF[salonId] ?? DEMO_STAFF.default).find((s) => s.id === staffId)
     : null;
 
   const selectedDate = DATES[dateIdx];
+  const dateStr = selectedDate.toISOString().split('T')[0];
+
+  const { data: allSlots = [], isLoading, isError, refetch } = useTimeSlots(salonId, staffId ?? null, dateStr);
+
+  // 2-Hour buffer rule if it's today
+  const processedSlots = useMemo(() => {
+    const isToday = dateIdx === 0;
+    const now = new Date();
+    
+    return allSlots.map(slot => {
+      let isPast = false;
+      let isAvailable = slot.isAvailable;
+
+      if (isToday) {
+        const [hour, min] = slot.time.split(':').map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hour, min, 0, 0);
+
+        // 2-hour buffer rule
+        const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        
+        if (slotTime < twoHoursFromNow) {
+          isPast = true;
+          isAvailable = false;
+        }
+      }
+
+      return { ...slot, isPast, isAvailable };
+    });
+  }, [allSlots, dateIdx]);
+
+  const groupedSlots = useMemo(() => {
+    const morning: TimeSlot[] = [];
+    const afternoon: TimeSlot[] = [];
+    const evening: TimeSlot[] = [];
+
+    processedSlots.forEach(slot => {
+      const hour = parseInt(slot.time.split(':')[0], 10);
+      if (hour < 12) morning.push(slot);
+      else if (hour < 16) afternoon.push(slot);
+      else evening.push(slot);
+    });
+
+    return [
+      { ...TIME_GROUP_META[0], slots: morning },
+      { ...TIME_GROUP_META[1], slots: afternoon },
+      { ...TIME_GROUP_META[2], slots: evening },
+    ].filter(g => g.slots.length > 0);
+  }, [processedSlots]);
+
+  // Reset selected time if date changes
+  useEffect(() => {
+    setSelectedTime(null);
+  }, [dateIdx]);
 
   const handleContinue = () => {
     if (!selectedTime) return;
     
-    const timeSlot: TimeSlot = {
-      id: `ts-${selectedTime}`,
-      time: selectedTime,
-      isAvailable: true,
-      isPast: false
-    };
-
-    setDateTime(selectedDate.toISOString().split('T')[0], timeSlot);
+    setDateTime(dateStr, selectedTime);
     navigation.navigate('BookingSummary', {
-      salonId, staffId,
-      date: selectedDate.toISOString().split('T')[0],
-      time: selectedTime,
+      salonId, 
+      staffId,
+      date: dateStr,
+      time: selectedTime.time,
     });
   };
 
@@ -87,7 +133,7 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Stylist context */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.contextCard}>
+        <View style={styles.contextCard}>
           {staff ? (
             <>
               <Image
@@ -112,10 +158,10 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
               </View>
             </>
           )}
-        </Animated.View>
+        </View>
 
         {/* Date strip */}
-        <Animated.View entering={FadeInDown.delay(150)}>
+        <View>
           <Text style={styles.sectionTitle}>Select Date</Text>
           <ScrollView
             horizontal showsHorizontalScrollIndicator={false}
@@ -127,7 +173,7 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
               return (
                 <TouchableOpacity
                   key={i}
-                  onPress={() => { setDateIdx(i); setSelectedTime(null); }}
+                  onPress={() => setDateIdx(i)}
                   activeOpacity={0.85}
                 >
                   {active ? (
@@ -153,18 +199,18 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
               );
             })}
           </ScrollView>
-        </Animated.View>
+        </View>
 
         {/* Selected date bar */}
-        <Animated.View entering={FadeInDown.delay(200)} style={styles.dateBadge}>
+        <View style={styles.dateBadge}>
           <Calendar size={15} color={colors.primary} />
           <Text style={styles.dateBadgeText}>
             {selectedDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </Text>
-        </Animated.View>
+        </View>
 
         {/* Time groups */}
-        <Animated.View entering={FadeInDown.delay(250)} style={styles.sectionRow}>
+        <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Available Slots</Text>
           <View style={styles.legend}>
             <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
@@ -172,52 +218,70 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
             <View style={[styles.legendDot, { backgroundColor: colors.gray200 }]} />
             <Text style={styles.legendText}>Booked</Text>
           </View>
-        </Animated.View>
+        </View>
 
-        {TIME_GROUPS.map(({ label, icon: Icon, color, slots }, index) => (
-          <Animated.View entering={FadeInDown.delay(300 + index * 50)} key={label} style={styles.timeGroup}>
-            <View style={styles.timeGroupHeader}>
-              <View style={[styles.timeGroupIcon, { backgroundColor: color + '20' }]}>
-                <Icon size={15} color={color} />
+        {isLoading ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading time slots...</Text>
+          </View>
+        ) : isError ? (
+          <View style={styles.centerBox}>
+            <Text style={styles.errorText}>Failed to load slots</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : groupedSlots.length === 0 ? (
+          <View style={styles.centerBox}>
+             <Text style={styles.emptyIcon}>🕒</Text>
+             <Text style={styles.emptyTitle}>No slots available</Text>
+          </View>
+        ) : (
+          groupedSlots.map(({ label, icon: Icon, color, slots }, index) => (
+            <View key={label} style={styles.timeGroup}>
+              <View style={styles.timeGroupHeader}>
+                <View style={[styles.timeGroupIcon, { backgroundColor: color + '20' }]}>
+                  <Icon size={15} color={color} />
+                </View>
+                <Text style={styles.timeGroupLabel}>{label}</Text>
               </View>
-              <Text style={styles.timeGroupLabel}>{label}</Text>
+              <View style={styles.timeGrid}>
+                {slots.map((slot) => {
+                  const booked   = !slot.isAvailable;
+                  const isActive = selectedTime?.id === slot.id;
+                  return (
+                    <TouchableOpacity
+                      key={slot.id}
+                      disabled={booked}
+                      onPress={() => setSelectedTime(slot)}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.timeChip,
+                        booked   && styles.timeChipBooked,
+                        isActive && styles.timeChipActive,
+                      ]}
+                    >
+                      <Text style={[
+                        styles.timeChipText,
+                        booked   && styles.timeChipTextBooked,
+                        isActive && styles.timeChipTextActive,
+                      ]}>
+                        {slot.time}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-            <View style={styles.timeGrid}>
-              {slots.map((time) => {
-                const booked   = UNAVAILABLE.has(time);
-                const isActive = selectedTime === time;
-                return (
-                  <TouchableOpacity
-                    key={time}
-                    disabled={booked}
-                    onPress={() => setSelectedTime(time)}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.timeChip,
-                      booked   && styles.timeChipBooked,
-                      isActive && styles.timeChipActive,
-                    ]}
-                  >
-                    <Text style={[
-                      styles.timeChipText,
-                      booked   && styles.timeChipTextBooked,
-                      isActive && styles.timeChipTextActive,
-                    ]}>
-                      {time}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </Animated.View>
-        ))}
+          ))
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>
 
       {/* Footer */}
-      <Animated.View 
-        entering={BounceIn}
+      <View 
         style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}
       >
         {selectedTime ? (
@@ -227,7 +291,7 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
             </View>
             <View>
               <Text style={styles.selectedPillLabel}>Selected Time</Text>
-              <Text style={styles.selectedPillValue}>{selectedTime}</Text>
+              <Text style={styles.selectedPillValue}>{selectedTime.time}</Text>
             </View>
           </View>
         ) : (
@@ -248,7 +312,7 @@ export default function SlotSelectionScreen({ navigation, route }: Props) {
             <ChevronRight size={18} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -322,6 +386,14 @@ const styles = StyleSheet.create({
   timeChipText:       { ...typography.subtitle2, color: colors.textPrimary },
   timeChipTextActive: { color: '#fff' },
   timeChipTextBooked: { color: colors.textTertiary, textDecorationLine: 'line-through' },
+
+  centerBox: { justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
+  loadingText: { ...typography.body2, color: colors.textSecondary, marginTop: 12 },
+  errorText: { ...typography.body1, color: colors.error, marginBottom: 12 },
+  retryBtn: { paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 20 },
+  retryText: { ...typography.button, color: '#fff' },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { ...typography.subtitle1, color: colors.textSecondary },
 
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

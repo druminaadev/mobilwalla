@@ -24,7 +24,10 @@ import {
   Zap,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown, BounceIn } from "react-native-reanimated";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 import { HomeStackParamList } from "../../types/navigation";
 import { useBookingStore } from "../../store/bookingStore";
 import { DEMO_SALONS } from "../../data/demo";
@@ -41,6 +44,13 @@ const VALID_COUPONS: Record<string, Coupon> = {
   FLAT100: { code: 'FLAT100', discountType: 'flat', discountValue: 100 },
 };
 
+const bookingFormSchema = z.object({
+  couponCode: z.string().trim().optional(),
+  specialInstructions: z.string().max(500, "Instructions cannot exceed 500 characters").optional(),
+});
+
+type BookingFormData = z.infer<typeof bookingFormSchema>;
+
 export default function BookingSummaryScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { salonId, staffId, date, time } = route.params;
@@ -51,6 +61,8 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
     getDiscount, 
     getTotal, 
     getTotalDuration,
+    getTaxes,
+    getStaffPremium,
     coupon,
     applyCoupon,
     setSpecialInstructions,
@@ -59,17 +71,27 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
 
   const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
 
-  const [couponCode, setCouponCode] = useState(coupon?.code || "");
   const [couponError, setCouponError] = useState("");
+
+  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<BookingFormData>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: {
+      couponCode: coupon?.code || "",
+      specialInstructions: specialInstructions || "",
+    },
+    mode: "onChange"
+  });
+
+  const watchCouponCode = watch("couponCode");
 
   const subtotal = getSubtotal();
   const discountAmt = getDiscount();
-  const gst = Math.round((subtotal - discountAmt) * 0.18);
-  const premiumCharge = staff?.premiumCharge || 0;
-  const total = getTotal() + gst; // Total already includes premiumCharge and discount
+  const gst = getTaxes();
+  const premiumCharge = getStaffPremium();
+  const total = getTotal();
 
   const applyCode = () => {
-    const code = couponCode.trim().toUpperCase();
+    const code = (watchCouponCode || "").toUpperCase();
     if (VALID_COUPONS[code]) {
       applyCoupon(VALID_COUPONS[code]);
       setCouponError("");
@@ -81,8 +103,23 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
 
   const removeCoupon = () => {
     applyCoupon(null);
-    setCouponCode("");
+    setValue("couponCode", "");
     setCouponError("");
+  };
+
+  const onProceed = (data: BookingFormData) => {
+    setSpecialInstructions(data.specialInstructions || "");
+    
+    navigation.navigate("Payment", {
+      bookingData: {
+        salonId,
+        staffId,
+        date,
+        time,
+        services: selectedServices,
+        total,
+      },
+    });
   };
 
   return (
@@ -109,7 +146,7 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scroll}
       >
         {/* Salon hero */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.salonCard}>
+        <View style={styles.salonCard}>
           <Image
             source={{ uri: salon.coverImageUrl || salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" }}
             style={styles.salonImg}
@@ -123,11 +160,16 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
               </Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Appointment details */}
-        <Animated.View entering={FadeInDown.delay(150)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Appointment Details</Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Date & Time</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("SlotSelection", { salonId, staffId })}>
+              <Text style={styles.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.detailGrid}>
             <View style={styles.detailCell}>
               <View style={[styles.detailIcon, { backgroundColor: colors.primaryLight }]}>
@@ -168,13 +210,21 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
                   style={styles.staffThumb}
                 />
               )}
+              <TouchableOpacity onPress={() => navigation.navigate("StaffSelection", { salonId })} style={{ marginLeft: 12 }}>
+                <Text style={styles.editLink}>Edit</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Services */}
-        <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Selected Services</Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Selected Services</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("ServiceSelection", { salonId, isEditing: true })}>
+              <Text style={styles.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.servicesCard}>
             {selectedServices.map((svc, i) => (
               <View
@@ -198,24 +248,34 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
               </View>
             ))}
           </View>
-        </Animated.View>
+        </View>
 
         {/* Special Instructions */}
-        <Animated.View entering={FadeInDown.delay(250)} style={styles.section}>
+        <View style={styles.section}>
            <Text style={styles.sectionTitle}>Special Instructions</Text>
-           <TextInput
-             style={styles.notesInput}
-             placeholder="E.g. I have sensitive skin, please avoid..."
-             placeholderTextColor={colors.textTertiary}
-             multiline
-             numberOfLines={3}
-             value={specialInstructions}
-             onChangeText={setSpecialInstructions}
+           <Controller
+             control={control}
+             name="specialInstructions"
+             render={({ field: { onChange, onBlur, value } }) => (
+               <TextInput
+                 style={[styles.notesInput, errors.specialInstructions && styles.inputError]}
+                 placeholder="E.g. I have sensitive skin, please avoid..."
+                 placeholderTextColor={colors.textTertiary}
+                 multiline
+                 numberOfLines={3}
+                 value={value}
+                 onBlur={onBlur}
+                 onChangeText={onChange}
+               />
+             )}
            />
-        </Animated.View>
+           {errors.specialInstructions && (
+             <Text style={styles.couponError}>{errors.specialInstructions.message}</Text>
+           )}
+        </View>
 
         {/* Coupon */}
-        <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Promo Code</Text>
           {coupon ? (
             <View style={styles.couponApplied}>
@@ -237,25 +297,32 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
               <View style={styles.couponRow}>
                 <View style={styles.couponInputWrap}>
                   <Tag size={15} color={colors.textTertiary} />
-                  <TextInput
-                    style={styles.couponInput}
-                    placeholder="Enter promo code"
-                    placeholderTextColor={colors.textTertiary}
-                    value={couponCode}
-                    onChangeText={(t) => {
-                      setCouponCode(t);
-                      setCouponError("");
-                    }}
-                    autoCapitalize="characters"
+                  <Controller
+                    control={control}
+                    name="couponCode"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.couponInput}
+                        placeholder="Enter promo code"
+                        placeholderTextColor={colors.textTertiary}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={(t) => {
+                          onChange(t);
+                          setCouponError("");
+                        }}
+                        autoCapitalize="characters"
+                      />
+                    )}
                   />
                 </View>
                 <TouchableOpacity
                   style={[
                     styles.couponApplyBtn,
-                    !couponCode.trim() && { opacity: 0.5 },
+                    (!watchCouponCode || !watchCouponCode.trim()) && { opacity: 0.5 },
                   ]}
                   onPress={applyCode}
-                  disabled={!couponCode.trim()}
+                  disabled={!watchCouponCode || !watchCouponCode.trim()}
                 >
                   <Text style={styles.couponApplyText}>Apply</Text>
                 </TouchableOpacity>
@@ -269,7 +336,7 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
                     key={c}
                     style={styles.couponHintChip}
                     onPress={() => {
-                      setCouponCode(c);
+                      setValue("couponCode", c);
                       setCouponError("");
                     }}
                   >
@@ -279,20 +346,20 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
               </View>
             </>
           )}
-        </Animated.View>
+        </View>
 
         {/* Bill */}
-        <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Summary</Text>
           <View style={styles.billCard}>
             <View style={styles.billRow}>
               <Text style={styles.billLabel}>Subtotal</Text>
-              <Text style={styles.billVal}>₹{subtotal}</Text>
+              <Text style={styles.billVal}>₹{subtotal.toFixed(2)}</Text>
             </View>
             {premiumCharge > 0 && (
               <View style={styles.billRow}>
-                <Text style={styles.billLabel}>Premium Stylist Charge</Text>
-                <Text style={styles.billVal}>+₹{premiumCharge}</Text>
+                <Text style={styles.billLabel}>Stylist Premium</Text>
+                <Text style={styles.billVal}>+₹{premiumCharge.toFixed(2)}</Text>
               </View>
             )}
             {discountAmt > 0 && (
@@ -301,55 +368,44 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
                   Discount
                 </Text>
                 <Text style={[styles.billVal, { color: colors.success }]}>
-                  −₹{discountAmt}
+                  −₹{discountAmt.toFixed(2)}
                 </Text>
               </View>
             )}
             <View style={styles.billRow}>
               <Text style={styles.billLabel}>Taxes & Fees (18% GST)</Text>
-              <Text style={styles.billVal}>₹{gst}</Text>
+              <Text style={styles.billVal}>₹{gst.toFixed(2)}</Text>
             </View>
             <View style={styles.billDivider} />
             <View style={styles.billRow}>
               <Text style={styles.billTotalLabel}>Total</Text>
-              <Text style={styles.billTotalVal}>₹{total}</Text>
+              <Text style={styles.billTotalVal}>₹{total.toFixed(2)}</Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Policy */}
-        <Animated.View entering={FadeInDown.delay(400)} style={styles.policyRow}>
+        <View style={styles.policyRow}>
           <Shield size={15} color={colors.textTertiary} />
           <Text style={styles.policyText}>
             Free cancellation up to 2 hours before your appointment.
           </Text>
-        </Animated.View>
+        </View>
 
         <View style={{ height: 110 }} />
       </ScrollView>
 
       {/* Footer */}
-      <Animated.View 
-        entering={BounceIn}
+      <View 
+       
         style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}
       >
         <View style={styles.footerAmountRow}>
           <Text style={styles.footerAmountLabel}>Grand Total</Text>
-          <Text style={styles.footerAmountVal}>₹{total}</Text>
+          <Text style={styles.footerAmountVal}>₹{total.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("Payment", {
-              bookingData: {
-                salonId,
-                staffId,
-                date,
-                time,
-                services: selectedServices,
-                total,
-              },
-            })
-          }
+          onPress={handleSubmit(onProceed)}
           activeOpacity={0.9}
         >
           <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.cta}>
@@ -357,7 +413,7 @@ export default function BookingSummaryScreen({ navigation, route }: Props) {
             <ChevronRight size={18} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -416,10 +472,15 @@ const styles = StyleSheet.create({
   },
 
   section: { marginTop: 20, paddingHorizontal: 16 },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle: {
     ...typography.h4,
     color: colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: 0,
+  },
+  editLink: {
+    ...typography.subtitle2,
+    color: colors.primary,
   },
 
   detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
@@ -508,9 +569,10 @@ const styles = StyleSheet.create({
      ...typography.body2,
      color: colors.textPrimary,
      textAlignVertical: 'top',
-     borderWidth: 1,
+     borderWidth: 1.5,
      borderColor: colors.border,
   },
+  inputError: { borderColor: colors.error },
 
   couponRow: { flexDirection: "row", gap: 10 },
   couponInputWrap: {

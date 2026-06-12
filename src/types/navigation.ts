@@ -25,12 +25,12 @@ export type MainTabParamList = {
 
 export type ServicesStackParamList = {
   ServicesCatalogue: undefined;
-  ServiceDetail: { service: Record<string, string> };
+  ServiceDetail: { service: any };
   ServiceBooking: { salonId: string; preSelectedServiceId?: string };
   StaffSelection: { salonId: string };
   SlotSelection: { salonId: string; staffId?: string | null };
   BookingSummary: { salonId: string; staffId?: string | null; date: string; time: string };
-  Payment: { bookingData: Record<string, string> };
+  Payment: { bookingData: any };
   BookingSuccess: { bookingId: string };
 };
 
@@ -39,22 +39,24 @@ export type HomeStackParamList = {
   Search: undefined;
   SalonList: Record<string, never>;
   SalonDetail: { id: string };
-  ServiceDetail: { service: Record<string, string> };
-  ServiceSelection: { salonId: string };
+  ServiceDetail: { service: any };
+  ServiceSelection: { salonId: string; isEditing?: boolean; preSelectedServiceId?: string };
   StaffSelection: { salonId: string };
   SlotSelection: { salonId: string; staffId?: string | null };
   BookingSummary: { salonId: string; staffId?: string | null; date: string; time: string };
-  Payment: { bookingData: Record<string, string> };
+  Payment: { bookingData: any };
   BookingSuccess: { bookingId: string };
   Reviews: undefined;
   Gallery: undefined;
   ImageViewer: { imageUri: string };
   Team: undefined;
-  ArtistProfile: { artist: Record<string, string> };
+  ArtistProfile: { artist: any };
   Location: undefined;
   Offers: undefined;
   SpecialForYou: undefined;
   Wishlist: undefined;
+  MembershipPlans: undefined;
+  MembershipCheckout: { planId: string };
 };
 
 export type BookingsStackParamList = {
@@ -68,7 +70,8 @@ export type BookingsStackParamList = {
 
 export type ShopStackParamList = {
   ShopHome: undefined;
-  ProductDetail: { product: Record<string, string>; id?: string };
+  ProductList: { categoryId?: string; title: string };
+  ProductDetail: { product: any; id?: string };
   Cart: undefined;
   Checkout: undefined;
   OrderConfirmed: { orderId: string };
@@ -89,4 +92,6 @@ export type ProfileStackParamList = {
   TransactionHistory: undefined;
   Referral: undefined;
   MyCoupon: undefined;
+  MembershipPlans: undefined;
+  MembershipCheckout: { planId: string };
 };

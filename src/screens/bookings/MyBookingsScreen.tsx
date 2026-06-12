@@ -6,17 +6,19 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  SafeAreaView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, ChevronRight, Clock, Plus } from 'lucide-react-native';
+import { Calendar, ChevronRight, Clock, Plus, Sparkles } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
 import { BookingStatus, Booking } from '@/types/models';
-import { DEMO_BOOKINGS } from '@/data/demo';
+import { DEMO_BOOKINGS, DEMO_SALONS } from '@/data/demo';
+import { SkeletonLoader } from '@/components/home/SkeletonLoader';
 
 type Props = any; // Flexible props for nested navigation handling
 
@@ -29,7 +31,14 @@ const TABS: { id: TabType; label: string }[] = [
 
 export default function MyBookingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const rootNav = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredBookings = DEMO_BOOKINGS.filter((booking) => {
     if (activeTab === 'upcoming') {
@@ -45,8 +54,13 @@ export default function MyBookingsScreen({ navigation }: Props) {
   });
 
   const handleBookNow = () => {
-    // Accurate redirection to Home to view salons/services
-    navigation.navigate('Main', { screen: 'HomeTab' });
+    rootNav.navigate('Main', {
+      screen: 'HomeTab',
+      params: {
+        screen: 'ServiceSelection',
+        params: { salonId: DEMO_SALONS[0].id }
+      }
+    });
   };
 
   const getStatusColor = (status: BookingStatus) => {
@@ -63,7 +77,7 @@ export default function MyBookingsScreen({ navigation }: Props) {
     const isCompleted = activeTab === 'completed';
 
     return (
-      <Animated.View 
+      <Animated.View
         entering={FadeInDown.delay(index * 100).springify()}
         layout={Layout.springify()}
         style={styles.card}
@@ -135,7 +149,7 @@ export default function MyBookingsScreen({ navigation }: Props) {
       </View>
       <Text style={styles.emptyTitle}>No {activeTab} bookings</Text>
       <Text style={styles.emptySubtitle}>
-        {activeTab === 'upcoming' 
+        {activeTab === 'upcoming'
           ? "You don't have any upcoming appointments. Treat yourself to a salon visit today!"
           : "You don't have any bookings in this section yet."}
       </Text>
@@ -145,6 +159,17 @@ export default function MyBookingsScreen({ navigation }: Props) {
       </TouchableOpacity>
     </Animated.View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Bookings</Text>
+        </View>
+        <SkeletonLoader />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -174,19 +199,26 @@ export default function MyBookingsScreen({ navigation }: Props) {
         data={filteredBookings}
         keyExtractor={(item) => item.id}
         renderItem={renderBookingCard}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom > 0 ? insets.bottom + 100 : 120 }]}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={[styles.fab, { bottom: insets.bottom > 0 ? insets.bottom + 80 : 100 }]} 
-        onPress={handleBookNow}
-        activeOpacity={0.8}
+      {/* Sticky Bottom Bar */}
+      <Animated.View 
+        entering={FadeInDown.springify().damping(15)}
+        style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom + 10 : 20 }]}
       >
-        <Plus size={24} color="#FFF" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleBookNow}
+          activeOpacity={0.9}
+        >
+          <LinearGradient colors={['#FF5C8A', '#FF3366']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.bottomBarBtn}>
+            <Sparkles size={20} color="#fff" />
+            <Text style={styles.bottomBarText}>Book New Service</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -380,20 +412,36 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginRight: 8,
   },
-  fab: {
+  // Bottom Bar
+  bottomBar: {
     position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
     elevation: 8,
-    zIndex: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  bottomBarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+  },
+  bottomBarText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.white,
   },
 });

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -16,7 +15,8 @@ import {
   MapPin,
   User,
   Scissors,
-  Zap
+  Zap,
+  Gift
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { HomeStackParamList } from "../../types/navigation";
@@ -38,39 +38,15 @@ export default function BookingSuccessScreen({ navigation, route }: Props) {
     staff,
     getTotal,
     getTotalDuration,
+    getLoyaltyPointsEarned,
     resetBooking,
   } = useBookingStore();
   const salon = DEMO_SALONS.find((s) => s.id === salonId) ?? DEMO_SALONS[0];
 
-  const scaleAnim = useRef(new Animated.Value(0));
-  const fadeAnim = useRef(new Animated.Value(0));
-  const slideAnim = useRef(new Animated.Value(30));
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.spring(scaleAnim.current, {
-        toValue: 1,
-        tension: 55,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.parallel([
-        Animated.timing(fadeAnim.current, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim.current, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, [scaleAnim, fadeAnim, slideAnim]);
 
   const totalDuration = getTotalDuration();
   const finalAmount = getTotal();
+  const loyaltyPoints = getLoyaltyPointsEarned();
 
   const handleViewBookings = () => {
     resetBooking();
@@ -131,19 +107,16 @@ export default function BookingSuccessScreen({ navigation, route }: Props) {
       >
         {/* Animated check */}
         <View style={styles.heroSection}>
-          <Animated.View style={{ transform: [{ scale: scaleAnim.current }] }}>
+          <View >
             <View style={styles.checkOuter}>
               <View style={styles.checkInner}>
                 <CheckCircle size={52} color={colors.success} strokeWidth={1.5} />
               </View>
             </View>
-          </Animated.View>
+          </View>
 
-          <Animated.View
-            style={[
-              styles.heroText,
-              { opacity: fadeAnim.current, transform: [{ translateY: slideAnim.current }] },
-            ]}
+          <View
+            style={styles.heroText}
           >
             <Text style={styles.heroTitle}>Booking Confirmed! 🎉</Text>
             <Text style={styles.heroSub}>
@@ -154,18 +127,28 @@ export default function BookingSuccessScreen({ navigation, route }: Props) {
             <View style={styles.bookingIdChip}>
               <Scissors size={13} color={colors.primary} />
               <Text style={styles.bookingIdText}>
-                ID: #{bookingId.toUpperCase()}
+                CODE: {bookingId.toUpperCase()}
               </Text>
             </View>
-          </Animated.View>
+          </View>
         </View>
 
+        {/* Loyalty Points Alert */}
+        {loyaltyPoints > 0 && (
+          <View style={styles.loyaltyCard}>
+             <View style={styles.loyaltyIconBox}>
+                <Gift size={20} color={colors.accent} />
+             </View>
+             <View style={{flex: 1}}>
+                <Text style={styles.loyaltyTitle}>You earned {loyaltyPoints} points!</Text>
+                <Text style={styles.loyaltySub}>Points will be added to your wallet after completion.</Text>
+             </View>
+          </View>
+        )}
+
         {/* Details card */}
-        <Animated.View
-          style={[
-            styles.detailsCard,
-            { opacity: fadeAnim.current, transform: [{ translateY: slideAnim.current }] },
-          ]}
+        <View
+          style={styles.detailsCard}
         >
           {DETAILS.map((d, i) => {
             const Icon = d.icon;
@@ -189,10 +172,45 @@ export default function BookingSuccessScreen({ navigation, route }: Props) {
               </View>
             );
           })}
-        </Animated.View>
+        </View>
+
+        {/* Timeline representation of Booking Status */}
+        <View style={styles.timelineCard}>
+            <Text style={styles.summaryTitle}>Timeline</Text>
+            
+            <View style={styles.timelineItem}>
+               <View style={styles.timelineIconActive}>
+                  <CheckCircle size={12} color="#fff" />
+               </View>
+               <View style={styles.timelineContent}>
+                  <Text style={styles.timelineTitleActive}>Booking Confirmed</Text>
+                  <Text style={styles.timelineSub}>Your booking has been received</Text>
+               </View>
+            </View>
+
+            <View style={styles.timelineLine} />
+
+            <View style={styles.timelineItem}>
+               <View style={styles.timelineIconPending} />
+               <View style={styles.timelineContent}>
+                  <Text style={styles.timelineTitle}>Salon Reminder</Text>
+                  <Text style={styles.timelineSub}>1 hour before appointment</Text>
+               </View>
+            </View>
+
+            <View style={styles.timelineLine} />
+
+            <View style={styles.timelineItem}>
+               <View style={styles.timelineIconPending} />
+               <View style={styles.timelineContent}>
+                  <Text style={styles.timelineTitle}>Service Complete</Text>
+                  <Text style={styles.timelineSub}>Enjoy your fresh look!</Text>
+               </View>
+            </View>
+        </View>
 
         {/* Services + Amount */}
-        <Animated.View style={[styles.summaryCard, { opacity: fadeAnim.current }]}>
+        <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Services Booked</Text>
           {services.map((svc) => (
             <View key={svc.id} style={styles.svcRow}>
@@ -206,20 +224,19 @@ export default function BookingSuccessScreen({ navigation, route }: Props) {
             <Text style={styles.totalLabel}>Total Paid</Text>
             <Text style={styles.totalVal}>₹{finalAmount}</Text>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Info chips */}
-        <Animated.View style={[styles.infoBox, { opacity: fadeAnim.current }]}>
+        <View style={styles.infoBox}>
           {[
             "📱 Confirmation sent to your phone",
-            "🔔 Reminder 1 hour before your appointment",
             "❌ Cancel up to 2 hours before for full refund",
           ].map((msg) => (
             <Text key={msg} style={styles.infoText}>
               {msg}
             </Text>
           ))}
-        </Animated.View>
+        </View>
 
         <View style={{ height: 110 }} />
       </ScrollView>
@@ -299,7 +316,19 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.primary,
   },
-  bookingIdText: { ...typography.subtitle2, color: colors.primary },
+  bookingIdText: { ...typography.subtitle2, color: colors.primary, fontWeight: '800' },
+
+  loyaltyCard: {
+     flexDirection: 'row', alignItems: 'center', gap: 12,
+     backgroundColor: colors.accentLight,
+     borderWidth: 1.5, borderColor: colors.accent,
+     borderRadius: 16, padding: 16, marginBottom: 16,
+  },
+  loyaltyIconBox: {
+     width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center'
+  },
+  loyaltyTitle: { ...typography.subtitle2, color: colors.accentDark, marginBottom: 2 },
+  loyaltySub: { ...typography.caption, color: colors.textSecondary, lineHeight: 16 },
 
   detailsCard: {
     backgroundColor: "#fff",
@@ -337,6 +366,35 @@ const styles = StyleSheet.create({
   },
   detailVal: { ...typography.subtitle1, color: colors.textPrimary },
   detailSub: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+
+  timelineCard: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  timelineItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  timelineIconActive: {
+     width: 24, height: 24, borderRadius: 12, backgroundColor: colors.success,
+     justifyContent: 'center', alignItems: 'center', zIndex: 2
+  },
+  timelineIconPending: {
+     width: 24, height: 24, borderRadius: 12, backgroundColor: colors.gray100,
+     borderWidth: 2, borderColor: colors.border, zIndex: 2
+  },
+  timelineContent: { flex: 1, paddingTop: 2 },
+  timelineTitleActive: { ...typography.subtitle2, color: colors.textPrimary, marginBottom: 2 },
+  timelineTitle: { ...typography.subtitle2, color: colors.textSecondary, marginBottom: 2 },
+  timelineSub: { ...typography.caption, color: colors.textTertiary },
+  timelineLine: {
+     width: 2, height: 24, backgroundColor: colors.border,
+     marginLeft: 11, marginVertical: -2, zIndex: 1
+  },
 
   summaryCard: {
     backgroundColor: "#fff",
@@ -378,12 +436,12 @@ const styles = StyleSheet.create({
   totalVal: { ...typography.h2, color: colors.primary },
 
   infoBox: {
-    backgroundColor: colors.successLight,
+    backgroundColor: colors.gray100,
     borderRadius: 18,
     padding: 16,
     gap: 8,
   },
-  infoText: { ...typography.caption, color: colors.textPrimary, lineHeight: 20 },
+  infoText: { ...typography.caption, color: colors.textSecondary, lineHeight: 20 },
 
   footer: {
     position: "absolute",
