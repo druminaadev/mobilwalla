@@ -44,7 +44,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ topInset }) => {
 };
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   locationText: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 16 },

@@ -30,6 +30,18 @@ const BEST_SELLERS = [
   { id: '2', name: 'Vitamin C Cream', brand: 'Neutrogena', price: 1299, rating: 4.5, image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=400&q=80' },
 ];
 
+const ALL_PRODUCTS = [
+  { id: '1', name: 'Keratin Repair Serum', brand: 'L\'Oréal Paris', price: 899, rating: 4.8, categoryId: 'hair', image: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=400&q=80' },
+  { id: '2', name: 'Vitamin C Cream', brand: 'Neutrogena', price: 1299, rating: 4.5, categoryId: 'skin', image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=400&q=80' },
+  { id: '3', name: 'Matte Lipstick', brand: 'MAC', price: 1500, rating: 4.7, categoryId: 'makeup', image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80' },
+  { id: '4', name: 'Shea Butter Lotion', brand: 'The Body Shop', price: 950, rating: 4.6, categoryId: 'body', image: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=400&q=80' },
+  { id: '5', name: 'Floral Eau de Parfum', brand: 'Chanel', price: 8500, rating: 4.9, categoryId: 'fragrance', image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=400&q=80' },
+  { id: '6', name: 'Argan Hair Oil', brand: 'Moroccanoil', price: 2500, rating: 4.8, categoryId: 'hair', image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=400&q=80' },
+  { id: '7', name: 'Hyaluronic Serum', brand: 'The Ordinary', price: 2199, rating: 4.9, categoryId: 'skin', image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80' },
+  { id: '8', name: 'Foundation Set', brand: 'Fenty Beauty', price: 3200, rating: 4.8, categoryId: 'makeup', image: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80' },
+  { id: '9', name: 'Exfoliating Scrub', brand: 'Clinique', price: 1800, rating: 4.5, categoryId: 'body', image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=400&q=80' },
+];
+
 export default function ShopHomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
@@ -154,8 +166,48 @@ export default function ShopHomeScreen() {
           </ScrollView>
         </Animated.View>
 
+        {/* PRODUCTS BY CATEGORY */}
+        {CATEGORIES.map((cat, index) => {
+          const categoryProducts = ALL_PRODUCTS.filter(p => p.categoryId === cat.id);
+          if (categoryProducts.length === 0) return null;
+          
+          return (
+            <Animated.View key={cat.id} entering={FadeInUp.delay(400 + index * 100)}>
+              {renderSectionHeader(cat.name, () => {})}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productScroll}>
+                {categoryProducts.map((item) => (
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.productCard} 
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate('ProductDetail', { product: item })}
+                  >
+                    <View style={styles.productImageWrap}>
+                      <Image source={{ uri: item.image }} style={styles.productImage} />
+                      <TouchableOpacity style={styles.wishBtn}>
+                        <Heart size={16} color={colors.textTertiary} />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productBrand}>{item.brand}</Text>
+                      <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+                      <View style={styles.priceRow}>
+                        <Text style={styles.productPrice}>₹{item.price}</Text>
+                        <View style={styles.ratingWrap}>
+                          <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                          <Text style={styles.ratingText}>{item.rating}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Animated.View>
+          );
+        })}
+
         {/* PROMO POSTER */}
-        <Animated.View entering={FadeInUp.delay(400)} style={styles.posterWrap}>
+        <Animated.View entering={FadeInUp.delay(900)} style={styles.posterWrap}>
           <Image 
             source={{ uri: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80' }} 
             style={styles.posterImage} 

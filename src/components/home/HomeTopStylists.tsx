@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star } from 'lucide-react-native';
+import { Star, ChevronRight } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { STYLISTS } from '../../data/mockHomeData';
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +18,10 @@ export const HomeTopStylists = () => {
     <Animated.View entering={FadeInUp.delay(800)} style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Top Stylists</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Team')}><Text style={styles.seeAllText}>Meet All →</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Team')} style={styles.seeAllBtn}>
+          <Text style={styles.seeAllText}>Meet All</Text>
+          <ChevronRight size={16} color={colors.textTertiary} />
+        </TouchableOpacity>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stylistScroll}>
         {STYLISTS.map((st) => (
@@ -42,11 +45,12 @@ export const HomeTopStylists = () => {
 
 const styles = StyleSheet.create({
   section: { marginBottom: 32 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
-  seeAllText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 12, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.3 },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center' },
+  seeAllText: { fontSize: 13, fontWeight: '600', color: colors.textTertiary },
   stylistScroll: { paddingHorizontal: 16, gap: 16 },
-  stylistCard: { width: 120, alignItems: 'center', backgroundColor: colors.white, padding: 16, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  stylistCard: { width: 120, alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 20, borderWidth: 1, borderColor: colors.gray100 },
   stylistAvatarWrap: { position: 'relative', marginBottom: 12 },
   stylistAvatar: { width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center' },
   stylistInitials: { fontSize: 24, fontWeight: '700', color: colors.textTertiary },

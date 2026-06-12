@@ -26,5 +26,5 @@ export const HomeGreeting = () => {
 const styles = StyleSheet.create({
   greetingWrap: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16 },
   greetingTitle: { fontSize: 24, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.5 },
-  greetingSub: { fontSize: 15, color: colors.textSecondary, marginTop: 4 },
+  greetingSub: { fontSize: 14, color: colors.textSecondary, fontWeight: '500', marginTop: 2 },
 });
