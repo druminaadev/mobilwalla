@@ -18,6 +18,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
+import { SkeletonLoader } from '@/components/home/SkeletonLoader';
 
 type Props = NativeStackScreenProps<any, any>;
 
@@ -96,6 +97,12 @@ const BEST_SELLERS = [
 export default function OffersScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const [activeCat, setActiveCat] = useState<OfferCategory>('all');
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredOffers = OFFERS.filter((offer) => activeCat === 'all' || offer.category === activeCat);
   const featuredOffer = OFFERS.find((offer) => offer.isFeatured);
@@ -104,6 +111,14 @@ export default function OffersScreen({ navigation }: Props) {
   const copyToClipboard = (code: string) => {
     Alert.alert('Code Copied!', `Promo code ${code} has been copied to your clipboard.`);
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <SkeletonLoader />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

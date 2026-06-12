@@ -7,10 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   ArrowLeft, CreditCard, Wallet, Building2, QrCode,
-  ShieldCheck, ChevronRight, Check,
+  ShieldCheck, ChevronRight, Check, HandCoins, CalendarClock
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, BounceIn } from 'react-native-reanimated';
 import { HomeStackParamList } from '../../types/navigation';
 import { DEMO_WALLET } from '../../data/demo';
 import { colors } from '../../constants/colors';
@@ -52,6 +51,22 @@ const METHODS = [
     color: '#D9A355',
     bg: '#FDF3E0',
   },
+  {
+    id: 'bnpl',
+    label: 'Buy Now, Pay Later',
+    sub: 'Simpl · LazyPay · PostPe',
+    icon: CalendarClock,
+    color: '#8B5CF6',
+    bg: '#EDE9FE',
+  },
+  {
+    id: 'cash',
+    label: 'Pay at Salon',
+    sub: 'Cash · Card at counter',
+    icon: HandCoins,
+    color: colors.textSecondary,
+    bg: colors.gray100,
+  },
 ];
 
 export default function PaymentScreen({ navigation, route }: Props) {
@@ -90,7 +105,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Amount card */}
-        <Animated.View entering={FadeInDown.delay(100)}>
+        <View>
           <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.amountCard}>
             <View style={styles.amountCardCircle1} />
             <View style={styles.amountCardCircle2} />
@@ -100,12 +115,12 @@ export default function PaymentScreen({ navigation, route }: Props) {
               {(bookingData.services?.length ?? 0)} service{(bookingData.services?.length ?? 0) !== 1 ? 's' : ''}
             </Text>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* Payment methods */}
-        <Animated.View entering={FadeInDown.delay(150)}>
+        <View>
           <Text style={styles.sectionTitle}>Select Payment Method</Text>
-        </Animated.View>
+        </View>
         
         {METHODS.map((m, index) => {
           const Icon      = m.icon;
@@ -113,7 +128,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
           const isWalletLow = m.id === 'wallet' && DEMO_WALLET.balance < bookingData.total;
 
           return (
-            <Animated.View key={m.id} entering={FadeInDown.delay(200 + index * 50)}>
+            <View key={m.id}>
               <TouchableOpacity
                 style={[styles.methodCard, isActive && styles.methodCardActive]}
                 onPress={() => setSelected(m.id)}
@@ -133,23 +148,23 @@ export default function PaymentScreen({ navigation, route }: Props) {
                   {isActive && <Check size={12} color="#fff" strokeWidth={3} />}
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           );
         })}
 
         {/* Secure note */}
-        <Animated.View entering={FadeInDown.delay(400)} style={styles.secureRow}>
+        <View style={styles.secureRow}>
           <ShieldCheck size={16} color={colors.success} />
           <Text style={styles.secureText}>
             256-bit SSL encrypted · Powered by Razorpay
           </Text>
-        </Animated.View>
+        </View>
 
         <View style={{ height: 110 }} />
       </ScrollView>
 
       {/* Footer */}
-      <Animated.View entering={BounceIn} style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity
           onPress={handlePay}
           disabled={isSubmitting || walletInsufficient}
@@ -167,7 +182,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
             )}
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 }

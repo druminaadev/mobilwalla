@@ -98,6 +98,7 @@ export interface Staff {
   isAvailable: boolean;
   nextAvailable?: string;
   premiumCharge?: number;
+  priceModifier?: number;
 }
 
 export interface TimeSlot {
@@ -187,3 +188,26 @@ export interface WishlistService {
   duration: number;
   image: string;
 }
+
+export interface WishlistProduct {
+  id: string;
+  name: string;
+  brand: string;
+  price: number;
+  image: string;
+  rating: number;
+}
+
+export interface MembershipPlan {
+  id: string;
+  name: string;
+  tagline?: string;
+  price: number;
+  durationMonths: number;
+  benefits: string[];
+  colorStart: string;
+  colorEnd: string;
+  imageUrl?: string;
+  isPopular?: boolean;
+}
+

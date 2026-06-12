@@ -89,6 +89,12 @@ export default function MainStack() {
             </View>
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('ProfileTab', { screen: 'Profile' });
+          },
+        })}
       />
     </Tab.Navigator>
   );

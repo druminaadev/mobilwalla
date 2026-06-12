@@ -21,7 +21,7 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [name, setName] = useState(user.name ?? '');
   const [email, setEmail] = useState(user.email ?? '');
   const [dob, setDob] = useState(user.dateOfBirth ?? '15/03/1995');
-  const [gender, setGender] = useState<'MALE' | 'FEMALE'>(user.gender ?? 'FEMALE');
+  const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>(user.gender ?? 'FEMALE');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {

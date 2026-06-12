@@ -37,7 +37,7 @@ export default function AddressesScreen({ navigation }: Props) {
         title="Saved Addresses"
         onBack={() => navigation.goBack()}
         right={
-          <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddAddress')}>
+          <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddAddress', {})}>
             <Plus size={22} color={colors.primary} />
           </TouchableOpacity>
         }
@@ -56,7 +56,7 @@ export default function AddressesScreen({ navigation }: Props) {
             <Text style={styles.emptyTitle}>No saved addresses</Text>
             <Text style={styles.emptySub}>Add an address to make checkout faster.</Text>
             <View style={{ marginTop: 24, width: '100%' }}>
-              <Button title="Add New Address" onPress={() => navigation.navigate('AddAddress')} fullWidth />
+              <Button title="Add New Address" onPress={() => navigation.navigate('AddAddress', {})} fullWidth />
             </View>
           </Animated.View>
         }

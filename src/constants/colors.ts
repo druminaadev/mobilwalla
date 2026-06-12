@@ -12,10 +12,20 @@ export const colors = {
   gray100: '#F3F4F6',
   gray200: '#E5E7EB',
   gray300: '#D1D5DB',
+  gray400: '#9CA3AF',
   error: '#EF4444',
+  errorLight: '#FEE2E2',
   success: '#10B981',
+  successLight: '#D1FAE5',
   warning: '#F59E0B',
+  warningLight: '#FEF3C7',
   info: '#3B82F6',
+  surface: '#FFFFFF',
+  primaryLight: '#FFE4E6',
+  primaryDark: '#E11D48',
+  accentLight: '#FEF3C7',
+  accentDark: '#B45309',
+  rating: '#F59E0B',
 } as const;
 
 export type ColorName = keyof typeof colors;

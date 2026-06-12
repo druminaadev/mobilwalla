@@ -12,13 +12,13 @@ import { typography } from '../../constants/typography';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Wishlist'>;
 
-const TABS = ['Salons', 'Services'];
+const TABS = ['Salons', 'Services', 'Products'];
 
 export default function WishlistScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const [tabIndex, setTabIndex] = useState(0);
   
-  const { salons, services, toggleSalon, toggleService } = useWishlistStore();
+  const { salons, services, products, toggleSalon, toggleService, toggleProduct } = useWishlistStore();
 
   const renderSalon = ({ item, index }: any) => {
     return (
@@ -73,6 +73,27 @@ export default function WishlistScreen({ navigation }: Props) {
     );
   };
 
+  const renderProduct = ({ item, index }: any) => {
+    return (
+      <Animated.View layout={Layout.springify()} entering={FadeInDown.delay(index * 50)} style={styles.cardRowStyle}>
+         <Image source={{ uri: item.image }} style={styles.productThumb} />
+         <View style={styles.svcInfo}>
+            <Text style={styles.cardSub} numberOfLines={1}>{item.brand}</Text>
+            <Text style={styles.svcName}>{item.name}</Text>
+         </View>
+         <View style={styles.svcRight}>
+            <Text style={styles.svcPrice}>₹{item.price}</Text>
+            <TouchableOpacity 
+               style={styles.svcHeartBtn}
+               onPress={() => toggleProduct(item)}
+            >
+               <Heart size={20} color={colors.error} fill={colors.error} />
+            </TouchableOpacity>
+         </View>
+      </Animated.View>
+    );
+  };
+
   return (
     <View style={styles.root}>
       {/* Header */}
@@ -97,7 +118,7 @@ export default function WishlistScreen({ navigation }: Props) {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-                  {t} {i === 0 ? `(${salons.length})` : `(${services.length})`}
+                  {t} {i === 0 ? `(${salons.length})` : i === 1 ? `(${services.length})` : `(${products.length})`}
                 </Text>
               </TouchableOpacity>
             );
@@ -121,7 +142,7 @@ export default function WishlistScreen({ navigation }: Props) {
             </Animated.View>
           }
         />
-      ) : (
+      ) : tabIndex === 1 ? (
         <FlatList
           data={services}
           keyExtractor={(item) => item.id}
@@ -133,6 +154,21 @@ export default function WishlistScreen({ navigation }: Props) {
               <Heart size={64} color={colors.gray200} />
               <Text style={styles.emptyTitle}>No saved services</Text>
               <Text style={styles.emptySub}>Save your favorite services for quick booking.</Text>
+            </Animated.View>
+          }
+        />
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id}
+          renderItem={renderProduct}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <Animated.View entering={FadeInDown} style={styles.emptyContainer}>
+              <Heart size={64} color={colors.gray200} />
+              <Text style={styles.emptyTitle}>No saved products</Text>
+              <Text style={styles.emptySub}>Save your favorite products for quick checkout.</Text>
             </Animated.View>
           }
         />
@@ -296,6 +332,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  productThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: colors.gray100,
   },
   svcInfo: {
     flex: 1,

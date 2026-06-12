@@ -103,7 +103,7 @@ export default function OrderConfirmedScreen() {
           <TouchableOpacity
             style={styles.shopBtn}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('ProductList')}
+            onPress={() => navigation.navigate('ShopHome')}
           >
             <ShoppingBag size={18} color="#FF5C8A" />
             <Text style={styles.shopBtnText}>Continue Shopping</Text>

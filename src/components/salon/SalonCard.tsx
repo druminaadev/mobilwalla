@@ -24,7 +24,7 @@ export const SalonCard: React.FC<Props> = ({ salon, onPress, horizontal = true }
       name: salon.name,
       address: salon.addressLine1,
       rating: salon.rating,
-      priceRange: '₹₹',
+      reviewCount: salon.totalReviews,
       image: salon.coverImageUrl || salon.logoUrl || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80",
     });
   };

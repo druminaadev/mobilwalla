@@ -54,7 +54,7 @@ export default function ServiceDetailScreen({ route, navigation }: Props) {
           <Text style={styles.priceLabel}>Starting from</Text>
           <Text style={styles.price}>₹{service.price}</Text>
         </View>
-        <Pressable onPress={() => navigation.navigate('ServiceBooking', { salonId: service.salonId || '1', preSelectedServiceId: service.id })}>
+        <Pressable onPress={() => navigation.navigate('ServiceSelection', { salonId: service.salonId || '1', preSelectedServiceId: service.id })}>
           <LinearGradient colors={['#FF5C8A', '#FF5C8A']} style={styles.bookButton}>
             <Text style={styles.bookText}>Book Now</Text>
           </LinearGradient>

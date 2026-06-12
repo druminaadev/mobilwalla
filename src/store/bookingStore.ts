@@ -9,27 +9,41 @@ interface BookingState {
   salonImage: string | null;
   services: Service[];
   staff: Staff | null;
+  staffPriceModifier: number;
   date: string | null;
   timeSlot: TimeSlot | null;
   coupon: Coupon | null;
   specialInstructions: string;
+  isWaitlist: boolean;
 
   // Actions
   setSalon: (id: string, name: string, image: string) => void;
   addService: (service: Service) => void;
   removeService: (serviceId: string) => void;
-  setStaff: (staff: Staff | null) => void;
+  clearServices: () => void;
+  
+  setStaff: (staff: Staff | null) => void; // null means 'Any Staff'
+  setStaffPriceModifier: (modifier: number) => void;
+  
   setDateTime: (date: string, timeSlot: TimeSlot) => void;
+  setWaitlist: (isWaitlist: boolean) => void;
+  
   applyCoupon: (coupon: Coupon | null) => void;
   setSpecialInstructions: (instructions: string) => void;
+  
   resetBooking: () => void;
 
   // Derivations / Getters
   getSubtotal: () => number;
+  getStaffPremium: () => number;
   getDiscount: () => number;
+  getTaxes: () => number;
   getTotal: () => number;
   getTotalDuration: () => number;
+  getLoyaltyPointsEarned: () => number;
 }
+
+const TAX_RATE = 0.18; // 18% GST
 
 export const useBookingStore = create<BookingState>()(
   persist(
@@ -39,16 +53,17 @@ export const useBookingStore = create<BookingState>()(
       salonImage: null,
       services: [],
       staff: null,
+      staffPriceModifier: 1.0,
       date: null,
       timeSlot: null,
       coupon: null,
       specialInstructions: '',
+      isWaitlist: false,
 
       setSalon: (id, name, image) => set({ salonId: id, salonName: name, salonImage: image }),
       
       addService: (service) =>
         set((state) => {
-          // Avoid duplicates
           if (state.services.find(s => s.id === service.id)) return state;
           return { services: [...state.services, service] };
         }),
@@ -58,9 +73,13 @@ export const useBookingStore = create<BookingState>()(
           services: state.services.filter((s) => s.id !== serviceId),
         })),
 
+      clearServices: () => set({ services: [] }),
+
       setStaff: (staff) => set({ staff }),
+      setStaffPriceModifier: (modifier) => set({ staffPriceModifier: modifier }),
 
       setDateTime: (date, timeSlot) => set({ date, timeSlot }),
+      setWaitlist: (isWaitlist) => set({ isWaitlist }),
 
       applyCoupon: (coupon) => set({ coupon }),
 
@@ -73,10 +92,12 @@ export const useBookingStore = create<BookingState>()(
           salonImage: null,
           services: [],
           staff: null,
+          staffPriceModifier: 1.0,
           date: null,
           timeSlot: null,
           coupon: null,
           specialInstructions: '',
+          isWaitlist: false,
         }),
 
       getSubtotal: () => {
@@ -84,15 +105,18 @@ export const useBookingStore = create<BookingState>()(
         return services.reduce((sum, service) => sum + service.price, 0);
       },
 
+      getStaffPremium: () => {
+        const subtotal = get().getSubtotal();
+        const modifier = get().staffPriceModifier;
+        return subtotal * (modifier - 1.0);
+      },
+
       getDiscount: () => {
         const subtotal = get().getSubtotal();
         const coupon = get().coupon;
         
         if (!coupon) return 0;
-        
-        if (coupon.minOrderValue && subtotal < coupon.minOrderValue) {
-          return 0; // Does not meet minimum order value
-        }
+        if (coupon.minOrderValue && subtotal < coupon.minOrderValue) return 0;
 
         let discount = 0;
         if (coupon.discountType === 'flat') {
@@ -105,30 +129,40 @@ export const useBookingStore = create<BookingState>()(
           discount = coupon.maxDiscount;
         }
 
-        return Math.min(discount, subtotal); // Discount cannot exceed subtotal
+        return Math.min(discount, subtotal);
+      },
+
+      getTaxes: () => {
+        const subtotal = get().getSubtotal();
+        const premium = get().getStaffPremium();
+        const discount = get().getDiscount();
+        const beforeTax = subtotal + premium - discount;
+        return Math.max(0, beforeTax * TAX_RATE);
       },
 
       getTotal: () => {
         const subtotal = get().getSubtotal();
+        const premium = get().getStaffPremium();
         const discount = get().getDiscount();
-        // Add additional charges like taxes or premium staff charge if needed here
-        let premiumCharge = 0;
-        const staff = get().staff;
-        if (staff?.premiumCharge) {
-           premiumCharge = staff.premiumCharge;
-        }
-        return Math.max(0, subtotal - discount + premiumCharge);
+        const taxes = get().getTaxes();
+        
+        return Math.max(0, subtotal + premium - discount + taxes);
       },
 
       getTotalDuration: () => {
         const { services } = get();
         return services.reduce((sum, service) => sum + service.duration, 0);
       },
+
+      getLoyaltyPointsEarned: () => {
+        // Example logic: 10% of total amount is returned as points
+        const total = get().getTotal();
+        return Math.floor(total * 0.1);
+      }
     }),
     {
       name: 'booking-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // Optional: partialize state to only save what's necessary if we don't want to save everything
     }
   )
 );

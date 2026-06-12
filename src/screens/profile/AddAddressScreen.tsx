@@ -20,7 +20,7 @@ const TYPES = [
 ];
 
 export default function AddAddressScreen({ navigation, route }: Props) {
-  const existing = route.params?.address;
+  const existing = (route.params as any)?.address;
   const isEdit = !!existing;
 
   const [type, setType] = useState<'home' | 'work' | 'other'>(existing?.type ?? 'home');
